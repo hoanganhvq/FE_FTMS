@@ -31,7 +31,8 @@ import CustomTimePicker from "./components/customTimePicker";
 import Home from "./components/Home";
 import GetGroups from "./components/gettingGroupTabs";
 import DisExample from "./components/Disclosure";
-
+import SignUp from "./components/signUp";
+import SignIn from "./components/signIn";
 
 function App() {
     function ComponentWithTournamentId({component: Component}) {
