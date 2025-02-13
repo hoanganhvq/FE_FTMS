@@ -7,7 +7,7 @@ const TournamentCardSkeleton = () => {
             <div className="grid justify-center animate-pulse">
                 <div className="grid grid-rows-1 max-w-auto grid-cols-1 p-3 pb-0 gap-3 border-1 text-slate-300">
 
-                    <div className="" className="text-gray-400
+                    <div className="text-gray-400
                              bg-slate-950 grid gap-2 grid-cols-2 hover:bg-slate-900 hover:ring-2 hover:shadow-blue-500
                              hover:drop-shadow-lg ring-blue-800 transition-all ease-out duration-500 p-6 rounded-xl
                              drop-shadow-lg shadow-blue-900 "><TrophyIcon

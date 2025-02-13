@@ -33,7 +33,8 @@ import GetGroups from "./components/gettingGroupTabs";
 import DisExample from "./components/Disclosure";
 import SignUp from "./components/signUp";
 import SignIn from "./components/signIn";
-
+import TournamentInformation from './components/tournamentInfo';
+import TeamDetail from './components/teamDetail';
 function App() {
     function ComponentWithTournamentId({component: Component}) {
         const {id} = useParams(); // Get the captured tournamentId from the URL
@@ -47,8 +48,10 @@ function App() {
             <Routes>
                 <Route path="/" element={<Layout/>}>
                     <Route index element={<Home/>}/>
+                    <Route path="/tournament/:id" element={<TournamentInformation/>}/>
                     <Route path="/tournaments" element={<TournamentDetails/>}/>
                     <Route path="/clubs" element={<ClubsDetails/>}/>
+                    <Route path="/club/:id" element={<TeamDetail/>}/>
                     <Route path="/new-tournament" element={<NewTournamentForm/>}/>
                     <Route path="/new-club" element={<ClubForm/>}/>
                     <Route path="/:id/test" element={<ComponentWithTournamentId component={TestBrackets}/>}/>

@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Group from "./groupsByTournamentId";
 import config from "../config.json"
@@ -34,10 +35,72 @@ const TournamentLabel = ({selectedTournament}) => {
     );
 }
 const TournamentDetails = () => {
-    const [tournaments, setTournaments] = useState([]);
+    const navigate = useNavigate(); 
+    const [tournaments, setTournaments] = useState([
+        {
+            id: 1,
+            tournament_name: "Champions League",
+            tournament_type_display: "Knockout",
+            teams_selection_display: "16 Teams",
+            current_stage_display: "Quarter Finals",
+            champion: {
+                club_name: "Real Madrid",
+                club_image: "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg"
+            }
+        },
+        {
+            id: 2,
+            tournament_name: "Europa League",
+            tournament_type_display: "Group Stage",
+            teams_selection_display: "32 Teams",
+            current_stage_display: "Group Stage",
+            champion: null
+        },
+        {
+            id: 3,
+            tournament_name: "Europa League",
+            tournament_type_display: "Group Stage",
+            teams_selection_display: "32 Teams",
+            current_stage_display: "Group Stage",
+            champion: null
+        },
+        {
+            id: 4,
+            tournament_name: "Europa League",
+            tournament_type_display: "Group Stage",
+            teams_selection_display: "32 Teams",
+            current_stage_display: "Group Stage",
+            champion: null
+        },
+        {
+            id: 5,
+            tournament_name: "Europa League",
+            tournament_type_display: "Group Stage",
+            teams_selection_display: "32 Teams",
+            current_stage_display: "Group Stage",
+            champion: null
+        },
+        {
+            id: 6,
+            tournament_name: "Europa League",
+            tournament_type_display: "Group Stage",
+            teams_selection_display: "32 Teams",
+            current_stage_display: "Group Stage",
+            champion: null
+        },
+        {
+            id: 7,
+            tournament_name: "Europa League",
+            tournament_type_display: "Group Stage",
+            teams_selection_display: "32 Teams",
+            current_stage_display: "Group Stage",
+            champion: null
+        }
+    ]);
+    const [loading, setLoading] = useState(false);
+    
     const [selectedTournament, setSelectedTournament] = useState(null);
     const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [showRoundOf16, setShowRoundOf16] = useState(false);
 
     function hideErrorContainer() {
@@ -45,30 +108,31 @@ const TournamentDetails = () => {
         errorContainer.style.display = 'none';
     }
 
-    useEffect(() => {
-        // Simulate data fetching with a delay
-        const fetchDataWithDelay = async () => {
-            try {
-                // Simulate a delay of 2 seconds before fetching data
-                await new Promise(resolve => setTimeout(resolve, 0));
-                const response = await axios.get(config.apiEndpoint);
-                setTournaments(response.data);
-                setLoading(false); // Set loading to false after data is fetched
+    // useEffect(() => {
+    //     // Simulate data fetching with a delay
+    //     const fetchDataWithDelay = async () => {
+    //         try {
+    //             // Simulate a delay of 2 seconds before fetching data
+    //             await new Promise(resolve => setTimeout(resolve, 0));
+    //             const response = await axios.get(config.apiEndpoint);
+    //             setTournaments(response.data);
+    //             setLoading(false); // Set loading to false after data is fetched
 
-            } catch (error) {
-                console.error('Error fetching tournaments data:', error);
-                setError('Error fetching tournaments. Please try again later.');
-                setLoading(false); // Set loading to false in case of an error
+    //         } catch (error) {
+    //             console.error('Error fetching tournaments data:', error);
+    //             setError('Error fetching tournaments. Please try again later.');
+    //             setLoading(false); // Set loading to false in case of an error
 
-            }
+    //         }
 
-        };
+    //     };
 
-        fetchDataWithDelay();
-    }, []);
+    //     fetchDataWithDelay();
+    // }, []);
 
-    const handleGet = tournament => {
-        setSelectedTournament(tournament);
+    const handleNavigate = tournament => {
+        // setSelectedTournament(tournament);
+         navigate(`/tournament/${tournament.id}`,{state: {tournament}});
     };
 
     const handleNext = () => {
@@ -142,32 +206,32 @@ const TournamentDetails = () => {
         <div className="bg-slate-900 text-slate-300">
             <TournamentLabel selectedTournament={selectedTournament}/>
             <div className="grid justify-center">
-                {!selectedTournament ? (
-                    <div className="grid grid-rows-1 max-w-auto grid-cols-1 p-3  gap-3 border-1 text-slate-300">
+
+                    <div className="flex flex-wrap gap-20 justify-center p-3">
                         {tournaments.map(tournament => (
-                            <div className="" key={tournament.id} onClick={() => handleGet(tournament)} className="text-gray-400
+                            <div key={tournament.id} onClick={() => handleNavigate(tournament)} className="text-gray-400
                              bg-slate-950 grid gap-2 grid-cols-2 hover:bg-slate-900 hover:ring-2 hover:shadow-blue-500
                              hover:drop-shadow-lg ring-blue-800 transition-all ease-out duration-500 p-6 rounded-xl
                              drop-shadow-lg shadow-blue-900 "><TrophyIcon
                                 className="absolute w-40 h-40 ml-32 opacity-10"/>
                                 <div className="p-1 pt-0 pb-1 col-span-2 font-semibold text-md text-teal-500">
-                                    <div className="font-medium text-[10px] font-sans text-gray-600 ">NAME</div>
+                                    <div className="font-medium text-[10px] font-sans text-gray-400 ">TÊN GIẢI ĐẤU</div>
                                     {tournament.tournament_name}</div>
 
                                 <div className="p-1 pt-0 pb-3 font-semibold text-xs ">
-                                    <div className="font-medium text-[10px] font-sans text-gray-600">TYPE</div>
+                                    <div className="font-medium text-[10px] font-sans text-gray-600">THỜI GIAN</div>
                                     {tournament.tournament_type_display}</div>
 
                                 <div className="p-1 pt-0 pb-3 font-semibold text-xs ">
-                                    <div className="font-medium text-[10px] font-sans text-gray-600">TEAMS</div>
+                                    <div className="font-medium text-[10px] font-sans text-gray-600">SỐ ĐỘI</div>
                                     {tournament.teams_selection_display}</div>
 
                                 <div className="p-1 pt-0 pb-3 font-semibold text-xs ">
-                                    <div className="font-medium text-[10px] font-sans text-gray-600">STAGE</div>
+                                    <div className="font-medium text-[10px] font-sans text-gray-600">THỂ THỨC</div>
                                     {tournament.current_stage_display}</div>
 
                                 <div className="p-1 pt-0 pb-3 font-semibold text-xs ">
-                                    <div className="font-medium text-[10px] font-sans text-gray-600">CHAMPION</div>
+                                    <div className="font-medium text-[10px] font-sans text-gray-600">ĐỘI VÔ ĐỊCH</div>
                                     {tournament.champion ? (
                                         <div className="flex">
                                             <div className="pr-1 text-amber-400">{tournament.champion.club_name}</div>
@@ -182,30 +246,6 @@ const TournamentDetails = () => {
                             </div>
                         ))}
                     </div>
-                ) : (
-                    <div>
-                        <div className="flex place-content-between">
-                            <div onClick={handleBackToTournaments} className="gap-2 flex place-items-center my-3">
-                                <ChevronDoubleLeftIcon className="w-8 h-8 text-blue-500"/>Back
-                            </div>
-                            <Link to={`/${selectedTournament.id}/test`}>
-                                <div onClick={handleNext} className="gap-2 flex place-items-center my-3 ">
-                                    Next<ChevronDoubleRightIcon className="w-8 h-8 text-blue-500"/>
-
-                                </div>
-                            </Link>
-
-                        </div>
-
-                        {showRoundOf16 ?
-                            <RoundOf16 tournamentId={selectedTournament.id}/> :
-                            <GetGroups tournamentId={selectedTournament.id}/>
-                        }
-
-
-                        {/*<Group tournamentId={selectedTournament.id} onBackToTournaments={handleBackToTournaments} />*/}
-                    </div>
-                )}
             </div>
         </div>
     );
