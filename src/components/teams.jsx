@@ -71,135 +71,159 @@ const ClubsDetailsSkeleton = () => {
 const ClubsDetails = () => {
     const navigate = useNavigate();
     const clubs = [
-        
-            {
-                pk: 1,
-                club_name: "FC Du Lịch",
-                club_logo: "https://source.unsplash.com/100x100/?logo,soccer",
-                club_image: "https://source.unsplash.com/400x300/?football,team",
-                address: "Sân bóng C500, Hà Đông, Hà Nội",
-                stadium: "Sân C500",
-                jersey_color: "Xanh - Trắng",
-                coach: "Nguyễn Văn Long",
-                captain_name: "Nguyễn Hoàng",
-                staff: ["Trợ lý HLV: Trần Minh", "HLV thể lực: Bùi Đức"],
-                phone_number: "0987654321",
-                founded_year: 2012,
-                achievements: ["🏆 Vô địch giải HPL-S7", "🥈 Á quân giải Ngoại Hạng Phủi 2020"],
-                members: [
-                    { name: "Nguyễn Hoàng", position: "Tiền đạo" },
-                    { name: "Trần Đức", position: "Tiền vệ" },
-                    { name: "Bùi Văn", position: "Hậu vệ" },
-                    { name: "Lê Mạnh", position: "Thủ môn" }
-                ],
-                statistics: {
-                    matches_played: 120,
-                    wins: 80,
-                    losses: 30,
-                    goals_scored: 250,
-                    top_scorer: "Nguyễn Hoàng (50 bàn)"
-                },
-                social_media: {
-                    facebook: "https://facebook.com/fc.dulich",
-                    website: "https://fc-dulich.vn"
-                }
+        {
+            "pk": 1,
+            "club_name": "FC Du Lịch",
+            "club_logo": "https://source.unsplash.com/100x100/?logo,soccer",
+            "club_image": "https://source.unsplash.com/400x300/?football,team",
+            "address": "Sân bóng C500, Hà Đông, Hà Nội",
+            "person_contact": "Phan Hoang Anh",
+            "email": "phananhvq223@gmail.com",
+            "stadium": "Sân C500",
+            "jersey_color": "Xanh - Trắng",
+            "coach": "Nguyễn Văn Long",
+            "captain_name": "Nguyễn Hoàng",
+            "staff": ["Trợ lý HLV: Trần Minh", "HLV thể lực: Bùi Đức"],
+            "phone_number": "0987654321",
+            "founded_year": 2012,
+            "achievements": [
+                { "award": "🏆 Vô địch giải HPL-S7", "year": 2020 },
+                { "award": "🥈 Á quân giải Ngoại Hạng Phủi", "year": 2021 }
+            ],
+            "number_member": 20,
+            "members": [
+                { "name": "Nguyễn Hoàng", "position": "Tiền đạo", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Trần Đức", "position": "Tiền vệ", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Bùi Văn", "position": "Hậu vệ", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Lê Mạnh", "position": "Thủ môn", "image": "https://source.unsplash.com/100x100/?person,face" }
+            ],
+            "statistics": {
+                "matches_played": 120,
+                "wins": 80,
+                "losses": 30,
+                "draws": 10,
+                "goals_scored": 250,
+                "goals_conceded": 120,
+                "own_goals": 5,
+                "top_scorer": "Nguyễn Hoàng (50 bàn)"
             },
-            {
-                pk: 2,
-                club_name: "EOC FC",
-                club_logo: "https://source.unsplash.com/100x100/?logo,football",
-                club_image: "https://source.unsplash.com/400x300/?soccer,team",
-                address: "Sân bóng Hoàng Mai, Hà Nội",
-                stadium: "Sân Hoàng Mai",
-                jersey_color: "Đỏ - Đen",
-                coach: "Phạm Quang Minh",
-                captain_name: "Ngô Hoàng Anh",
-                staff: ["Trợ lý HLV: Vũ Minh", "HLV thể lực: Đặng Quốc"],
-                phone_number: "0912345678",
-                founded_year: 2015,
-                achievements: ["🏆 Vô địch giải HPL-S6", "🥉 Hạng ba giải HPL-S8"],
-                members: [
-                    { name: "Phan Văn Tài", position: "Tiền đạo" },
-                    { name: "Ngô Hoàng Anh", position: "Tiền vệ" },
-                    { name: "Đặng Quốc", position: "Hậu vệ" },
-                    { name: "Lê Văn Tùng", position: "Thủ môn" }
-                ],
-                statistics: {
-                    matches_played: 90,
-                    wins: 60,
-                    losses: 20,
-                    goals_scored: 180,
-                    top_scorer: "Phan Văn Tài (35 bàn)"
-                },
-                social_media: {
-                    facebook: "https://facebook.com/eocfc",
-                    website: "https://eocfc.vn"
-                }
-            },
-            {
-                pk: 3,
-                club_name: "Phoenix FC",
-                club_logo: "https://source.unsplash.com/100x100/?logo,sport",
-                club_image: "https://source.unsplash.com/400x300/?team,soccer",
-                address: "Sân bóng Gia Lâm, Hà Nội",
-                stadium: "Sân Gia Lâm",
-                jersey_color: "Vàng - Đen",
-                coach: "Trần Hoàng",
-                captain_name: "Võ Minh",
-                staff: ["Trợ lý HLV: Nguyễn Thanh", "HLV thể lực: Trần Hải"],
-                phone_number: "0965341234",
-                founded_year: 2018,
-                achievements: ["🥇 Vô địch giải Phủi Open 2021"],
-                members: [
-                    { name: "Võ Minh", position: "Tiền vệ" },
-                    { name: "Lê Phúc", position: "Tiền đạo" },
-                    { name: "Phạm Hải", position: "Hậu vệ" },
-                    { name: "Trịnh Hòa", position: "Thủ môn" }
-                ],
-                statistics: {
-                    matches_played: 75,
-                    wins: 50,
-                    losses: 15,
-                    goals_scored: 140,
-                    top_scorer: "Lê Phúc (28 bàn)"
-                },
-                social_media: {
-                    facebook: "https://facebook.com/phoenixfc",
-                    website: "https://phoenixfc.vn"
-                }
-            },
-            {
-                pk: 4,
-                club_name: "Ocean FC",
-                club_logo: "https://source.unsplash.com/100x100/?logo,ocean",
-                club_image: "https://source.unsplash.com/400x300/?team,football",
-                address: "Sân bóng Mỹ Đình, Hà Nội",
-                stadium: "Sân Mỹ Đình",
-                jersey_color: "Xanh Dương - Trắng",
-                coach: "Đỗ Quang Huy",
-                captain_name: "Lý Tuấn",
-                staff: ["Trợ lý HLV: Hà Văn", "HLV thể lực: Trần Dũng"],
-                phone_number: "0987112233",
-                founded_year: 2010,
-                achievements: ["🏆 Vô địch giải HPL-S4"],
-                members: [
-                    { name: "Lý Tuấn", position: "Tiền vệ" },
-                    { name: "Đặng Minh", position: "Tiền đạo" },
-                    { name: "Nguyễn Sơn", position: "Hậu vệ" },
-                    { name: "Phạm Lâm", position: "Thủ môn" }
-                ],
-                statistics: {
-                    matches_played: 130,
-                    wins: 85,
-                    losses: 25,
-                    goals_scored: 280,
-                    top_scorer: "Đặng Minh (60 bàn)"
-                },
-                social_media: {
-                    facebook: "https://facebook.com/oceanfc",
-                    website: "https://oceanfc.vn"
-                }
+            "social_media": {
+                "facebook": "https://facebook.com/fc.dulich",
+                "website": "https://fc-dulich.vn"
             }
+        },
+        {
+            "pk": 2,
+            "club_name": "EOC FC",
+            "club_logo": "https://source.unsplash.com/100x100/?logo,football",
+            "club_image": "https://source.unsplash.com/400x300/?soccer,team",
+            "address": "Sân bóng Hoàng Mai, Hà Nội",
+            "stadium": "Sân Hoàng Mai",
+            "jersey_color": "Đỏ - Đen",
+            "coach": "Phạm Quang Minh",
+            "captain_name": "Ngô Hoàng Anh",
+            "staff": ["Trợ lý HLV: Vũ Minh", "HLV thể lực: Đặng Quốc"],
+            "phone_number": "0912345678",
+            "founded_year": 2015,
+            "achievements": [
+                { "award": "🏆 Vô địch giải HPL-S6", "year": 2019 },
+                { "award": "🥉 Hạng ba giải HPL-S8", "year": 2022 }
+            ],
+            "members": [
+                { "name": "Phan Văn Tài", "position": "Tiền đạo", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Ngô Hoàng Anh", "position": "Tiền vệ", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Đặng Quốc", "position": "Hậu vệ", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Lê Văn Tùng", "position": "Thủ môn", "image": "https://source.unsplash.com/100x100/?person,face" }
+            ],
+            "statistics": {
+                "matches_played": 90,
+                "wins": 60,
+                "losses": 20,
+                "draws": 10,
+                "goals_scored": 180,
+                "goals_conceded": 90,
+                "own_goals": 3,
+                "top_scorer": "Phan Văn Tài (35 bàn)"
+            },
+            "social_media": {
+                "facebook": "https://facebook.com/eocfc",
+                "website": "https://eocfc.vn"
+            }
+        },
+        {
+            "pk": 3,
+            "club_name": "Phoenix FC",
+            "club_logo": "https://source.unsplash.com/100x100/?logo,sport",
+            "club_image": "https://source.unsplash.com/400x300/?team,soccer",
+            "address": "Sân bóng Gia Lâm, Hà Nội",
+            "stadium": "Sân Gia Lâm",
+            "jersey_color": "Vàng - Đen",
+            "coach": "Trần Hoàng",
+            "captain_name": "Võ Minh",
+            "staff": ["Trợ lý HLV: Nguyễn Thanh", "HLV thể lực: Trần Hải"],
+            "phone_number": "0965341234",
+            "founded_year": 2018,
+            "achievements": [
+                { "award": "🥇 Vô địch giải Phủi Open", "year": 2021 }
+            ],
+            "members": [
+                { "name": "Võ Minh", "position": "Tiền vệ", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Lê Phúc", "position": "Tiền đạo", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Phạm Hải", "position": "Hậu vệ", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Trịnh Hòa", "position": "Thủ môn", "image": "https://source.unsplash.com/100x100/?person,face" }
+            ],
+            "statistics": {
+                "matches_played": 75,
+                "wins": 50,
+                "losses": 15,
+                "draws": 10,
+                "goals_scored": 140,
+                "goals_conceded": 70,
+                "own_goals": 2,
+                "top_scorer": "Lê Phúc (28 bàn)"
+            },
+            "social_media": {
+                "facebook": "https://facebook.com/phoenixfc",
+                "website": "https://phoenixfc.vn"
+            }
+        },
+        {
+            "pk": 4,
+            "club_name": "Ocean FC",
+            "club_logo": "https://source.unsplash.com/100x100/?logo,ocean",
+            "club_image": "https://source.unsplash.com/400x300/?team,football",
+            "address": "Sân bóng Mỹ Đình, Hà Nội",
+            "stadium": "Sân Mỹ Đình",
+            "jersey_color": "Xanh Dương - Trắng",
+            "coach": "Đỗ Quang Huy",
+            "captain_name": "Lý Tuấn",
+            "staff": ["Trợ lý HLV: Hà Văn", "HLV thể lực: Trần Dũng"],
+            "phone_number": "0987112233",
+            "founded_year": 2010,
+            "achievements": [
+                { "award": "🏆 Vô địch giải HPL-S4", "year": 2018 }
+            ],
+            "members": [
+                { "name": "Lý Tuấn", "position": "Tiền vệ", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Đặng Minh", "position": "Tiền đạo", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Nguyễn Sơn", "position": "Hậu vệ", "image": "https://source.unsplash.com/100x100/?person,face" },
+                { "name": "Phạm Lâm", "position": "Thủ môn", "image": "https://source.unsplash.com/100x100/?person,face" }
+            ],
+            "statistics": {
+                "matches_played": 130,
+                "wins": 85,
+                "losses": 25,
+                "draws": 20,
+                "goals_scored": 280,
+                "goals_conceded": 130,
+                "own_goals": 4,
+                "top_scorer": "Đặng Minh (60 bàn)"
+            },
+            "social_media": {
+                "facebook": "https://facebook.com/oceanfc",
+                "website": "https://oceanfc.vn"
+            }
+        }
     ];
 
     const [loading, setLoading] = useState(false);

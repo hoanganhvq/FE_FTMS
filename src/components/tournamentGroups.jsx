@@ -43,6 +43,8 @@ const TournamentDetails = () => {
             tournament_type_display: "Knockout",
             teams_selection_display: "16 Teams",
             current_stage_display: "Quarter Finals",
+            status: "active",
+            tournament_image: "https://upload.wikimedia.org/wikipedia/en/2/2e/UEFA_Champions_League_logo_2.svg",
             champion: {
                 club_name: "Real Madrid",
                 club_image: "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg"
@@ -54,23 +56,34 @@ const TournamentDetails = () => {
             tournament_type_display: "Group Stage",
             teams_selection_display: "32 Teams",
             current_stage_display: "Group Stage",
+            status: "registering",
+            tournament_image: "https://upload.wikimedia.org/wikipedia/en/0/03/UEFA_Europa_League.svg",
             champion: null
         },
         {
             id: 3,
-            tournament_name: "Europa League",
-            tournament_type_display: "Group Stage",
-            teams_selection_display: "32 Teams",
-            current_stage_display: "Group Stage",
-            champion: null
-        },
-        {
+            tournament_name: "Copa America",
+            tournament_type_display: "Knockout",
+            teams_selection_display: "12 Teams",
+            current_stage_display: "Final",
+            status: "completed",
+            tournament_image: "https://upload.wikimedia.org/wikipedia/en/9/99/Copa_Am%C3%A9rica_logo.svg",
+            champion: {
+                club_name: "Argentina",
+                club_image: "https://upload.wikimedia.org/wikipedia/en/c/c1/Argentina_national_football_team_logo.svg"
+            }
+        }, {
             id: 4,
-            tournament_name: "Europa League",
-            tournament_type_display: "Group Stage",
-            teams_selection_display: "32 Teams",
-            current_stage_display: "Group Stage",
-            champion: null
+            tournament_name: "Champions League",
+            tournament_type_display: "Knockout",
+            teams_selection_display: "16 Teams",
+            current_stage_display: "Quarter Finals",
+            status: "active",
+            tournament_image: "https://upload.wikimedia.org/wikipedia/en/2/2e/UEFA_Champions_League_logo_2.svg",
+            champion: {
+                club_name: "Real Madrid",
+                club_image: "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg"
+            }
         },
         {
             id: 5,
@@ -78,25 +91,26 @@ const TournamentDetails = () => {
             tournament_type_display: "Group Stage",
             teams_selection_display: "32 Teams",
             current_stage_display: "Group Stage",
+            status: "registering",
+            tournament_image: "https://upload.wikimedia.org/wikipedia/en/0/03/UEFA_Europa_League.svg",
             champion: null
         },
         {
             id: 6,
-            tournament_name: "Europa League",
-            tournament_type_display: "Group Stage",
-            teams_selection_display: "32 Teams",
-            current_stage_display: "Group Stage",
-            champion: null
-        },
-        {
-            id: 7,
-            tournament_name: "Europa League",
-            tournament_type_display: "Group Stage",
-            teams_selection_display: "32 Teams",
-            current_stage_display: "Group Stage",
-            champion: null
+            tournament_name: "Copa America",
+            tournament_type_display: "Knockout",
+            teams_selection_display: "12 Teams",
+            current_stage_display: "Final",
+            status: "completed",
+            tournament_image: "https://upload.wikimedia.org/wikipedia/en/9/99/Copa_Am%C3%A9rica_logo.svg",
+            champion: {
+                club_name: "Argentina",
+                club_image: "https://upload.wikimedia.org/wikipedia/en/c/c1/Argentina_national_football_team_logo.svg"
+            }
         }
     ]);
+    
+    
     const [loading, setLoading] = useState(false);
     
     const [selectedTournament, setSelectedTournament] = useState(null);
@@ -133,6 +147,19 @@ const TournamentDetails = () => {
     const handleNavigate = tournament => {
         // setSelectedTournament(tournament);
          navigate(`/tournament/${tournament.id}`,{state: {tournament}});
+    };
+
+    const getStatusTag = (status) => {
+        switch (status) {
+            case "registering":
+                return <div className="bg-blue-500 text-white px-2 py-1 text-xs font-bold rounded-full">Đang đăng ký</div>;
+            case "active":
+                return <div className="bg-green-500 text-white px-2 py-1 text-xs font-bold rounded-full">Đang diễn ra</div>;
+            case "completed":
+                return <div className="bg-gray-500 text-white px-2 py-1 text-xs font-bold rounded-full">Đã kết thúc</div>;
+            default:
+                return null;
+        }
     };
 
     const handleNext = () => {
@@ -209,41 +236,41 @@ const TournamentDetails = () => {
 
                     <div className="flex flex-wrap gap-20 justify-center p-3">
                         {tournaments.map(tournament => (
-                            <div key={tournament.id} onClick={() => handleNavigate(tournament)} className="text-gray-400
-                             bg-slate-950 grid gap-2 grid-cols-2 hover:bg-slate-900 hover:ring-2 hover:shadow-blue-500
-                             hover:drop-shadow-lg ring-blue-800 transition-all ease-out duration-500 p-6 rounded-xl
-                             drop-shadow-lg shadow-blue-900 "><TrophyIcon
-                                className="absolute w-40 h-40 ml-32 opacity-10"/>
-                                <div className="p-1 pt-0 pb-1 col-span-2 font-semibold text-md text-teal-500">
-                                    <div className="font-medium text-[10px] font-sans text-gray-400 ">TÊN GIẢI ĐẤU</div>
-                                    {tournament.tournament_name}</div>
-
-                                <div className="p-1 pt-0 pb-3 font-semibold text-xs ">
-                                    <div className="font-medium text-[10px] font-sans text-gray-600">THỜI GIAN</div>
-                                    {tournament.tournament_type_display}</div>
-
-                                <div className="p-1 pt-0 pb-3 font-semibold text-xs ">
-                                    <div className="font-medium text-[10px] font-sans text-gray-600">SỐ ĐỘI</div>
-                                    {tournament.teams_selection_display}</div>
-
-                                <div className="p-1 pt-0 pb-3 font-semibold text-xs ">
-                                    <div className="font-medium text-[10px] font-sans text-gray-600">THỂ THỨC</div>
-                                    {tournament.current_stage_display}</div>
-
-                                <div className="p-1 pt-0 pb-3 font-semibold text-xs ">
-                                    <div className="font-medium text-[10px] font-sans text-gray-600">ĐỘI VÔ ĐỊCH</div>
-                                    {tournament.champion ? (
-                                        <div className="flex">
-                                            <div className="pr-1 text-amber-400">{tournament.champion.club_name}</div>
-                                            <img className="w-5 h-5 drop-shadow-md shadow-blue-50"
-                                                 src={tournament.champion.club_image} alt=""/>
-
-                                        </div>
-                                    ) : (
-                                        <div>No Champion</div>
-                                    )}</div>
-
-                            </div>
+                          <div key={tournament.id} onClick={() => handleNavigate(tournament)}
+                          className="relative w-[300px] h-[250px] text-gray-400 bg-slate-950 grid gap-2 grid-cols-2 hover:bg-slate-900 
+                                     hover:ring-2 hover:shadow-blue-500 hover:drop-shadow-lg ring-blue-800 transition-all 
+                                     ease-out duration-500 p-6 rounded-xl drop-shadow-lg shadow-blue-900">
+                          
+                          <TrophyIcon className="absolute w-40 h-40 ml-32 opacity-10" />
+                          
+                          {/* Hiển thị trạng thái */}
+                          <div className="absolute top-2 right-2">{getStatusTag(tournament.status)}</div>
+                      
+                          <div className="p-1 pt-0 pb-1 text-2xl col-span-2 font-semibold text-md text-teal-500">
+                              <div className="font-medium text-2xl text-[10px] font-sans text-gray-400 ">TÊN GIẢI ĐẤU</div>
+                              {tournament.tournament_name}
+                          </div>
+                          
+                          <div className="p-1 pt-0 pb-3 text-2xl font-semibold text-xs ">
+                              <div className="font-medium text-[10px]  text-2xl font-sans text-gray-600">THỜI GIAN</div>
+                              {tournament.tournament_type_display}
+                          </div>
+                      
+                          <div className="p-1 pt-0 pb-3 text-2xl  font-semibold text-xs ">
+                              <div className="font-medium text-[10px] text-2xl font-sans text-gray-600">SỐ ĐỘI</div>
+                              {tournament.teams_selection_display}
+                          </div>
+                      
+                          <div className="p-1 pt-0 pb-3  text-2xl font-semibold text-xs ">
+                              <div className="font-medium text-[10px] text-2xl font-sans text-gray-600">THỂ THỨC</div>
+                              {tournament.current_stage_display}
+                          </div>
+                      
+                          <div className="p-1 pt-0 pb-3 text-2xl font-semibold text-xs ">
+                              <div className="font-medium text-[10px] font-sans text-gray-600">ĐỊA ĐIỂM</div>
+                
+                          </div>
+                      </div>
                         ))}
                     </div>
             </div>

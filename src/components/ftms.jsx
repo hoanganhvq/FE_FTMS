@@ -1,22 +1,18 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import config from "../config.json"
-import {XCircleIcon, CheckCircleIcon} from '@heroicons/react/24/solid'
-
+import config from "../config.json";
+import { XCircleIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
 
 const NewTournamentForm = () => {
     const [formData, setFormData] = useState({
+        tournament_image: null,
         tournament_name: '',
-        slug: '',
-        match_per_day: '1',
-        match_time_1: null,
-        match_time_2: null,
-        teams_selection: '4',
-        tournament_type: 'Groups',
-        clubs: [],
+        phone_number: '',
+        location: '',
+        competition_format: 'Loại trực tiếp',
+        number_of_teams: 4,
+        number_of_members: 5
     });
-    const [selectedClubs, setSelectedClubs] = useState([]);
-    const [allClubs, setAllClubs] = useState([]);
 
     const hideSuccessContainer = () => {
         const successContainer = document.getElementById('success-container');
@@ -28,298 +24,186 @@ const NewTournamentForm = () => {
         errorContainer.style.display = 'none';
     }
 
-    useEffect(() => {
-        // Fetch all clubs from the database and update the state
-        const fetchClubs = async () => {
-            try {
-                const response = await axios.get(config.clubAPI);
-                setAllClubs(response.data);
-
-                // Generate initial club fields based on default teams_selection (4)
-                const initialClubs = generateInitialClubs(formData.teams_selection);
-                setFormData(prevFormData => ({...prevFormData, clubs: initialClubs}));
-
-            } catch (error) {
-                console.error('Error creating clubs:', error);
-                const errorMessageElement = document.getElementById('error-message');
-
-                // Update the error message text
-                errorMessageElement.textContent = "Can't get the Teams from the API.";
-
-                // Show the error container
-                const errorContainer = document.getElementById('error-container');
-                errorContainer.style.display = 'flex'; // Or set it to 'block' if you want to maintain the flex display
-
-                // Add an event listener to the SVG to hide the error container when clicked
-                const errorSvg = document.getElementById('error-svg');
-                errorSvg.addEventListener('click', hideErrorContainer);
-            }
-        }
-
-
-        fetchClubs();
-    }, []);
-
-
-    // Generate initial club fields based on teams_selection
-    const generateInitialClubs = (teamsSelection) => {
-        return Array.from({length: parseInt(teamsSelection)}, (_, index) => ({club_name: ''}));
+    const handleImageChange = (e) => {
+        setFormData({ ...formData, tournament_image: e.target.files[0] });
     };
-
-    // Update club fields when teams_selection value changes
-    const handleTeamsSelectionChange = (e) => {
-        const {value} = e.target;
-        setFormData({...formData, teams_selection: value, clubs: generateInitialClubs(value)});
-    };
-
-    // Your handleChange function
-    const handleChange = (e, index) => {
-        const {value} = e.target;
-        setSelectedClubs(prevSelectedClubs => {
-            const updatedSelectedClubs = [...prevSelectedClubs];
-            updatedSelectedClubs[index] = value;
-            return updatedSelectedClubs;
-        });
-
-        const updatedClubs = [...formData.clubs];
-        updatedClubs[index] = {club_name: value};
-        setFormData({...formData, clubs: updatedClubs});
-    };
-
-
-    // Filter the available clubs that have not been selected yet
-    const availableClubs = allClubs.filter(club => {
-        // Check if the club is selected or its value is empty
-        const isSelected = selectedClubs.includes(club.club_name);
-        const isEmptyValue = !formData.clubs.some(
-            (clubData) => clubData && clubData.club_name === club.club_name
-        );
-        return !isSelected || isEmptyValue;
-    });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Display the success message
         const processingMessageElement = document.getElementById('processing-message');
         const processingContainer = document.getElementById('processing-container');
         processingMessageElement.textContent = 'Tournament is being processed...';
-        processingContainer.style.display = 'flex'; // Or 'block' based on your styling
+        processingContainer.style.display = 'flex';
 
         const successMessageElement = document.getElementById('success-message');
         const successContainer = document.getElementById('success-container');
 
+        const formDataToSend = new FormData();
+        formDataToSend.append('tournament_image', formData.tournament_image);
+        formDataToSend.append('tournament_name', formData.tournament_name);
+        formDataToSend.append('phone_number', formData.phone_number);
+        formDataToSend.append('location', formData.location);
+        formDataToSend.append('competition_format', formData.competition_format);
+        formDataToSend.append('number_of_teams', formData.number_of_teams);
+
         try {
-            // Try to make the POST request
-            await axios.post(config.apiEndpoint + '/', formData);
+            await axios.post(config.apiEndpoint + '/', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
 
-            processingContainer.style.display = 'none'; // Or 'block' based on your styling
-
-            // Update the processing message
+            processingContainer.style.display = 'none';
             successMessageElement.textContent = 'Tournament is successfully created.';
-            successContainer.style.display = 'flex'; // Or 'block' based on your styling
+            successContainer.style.display = 'flex';
 
-            // Add event listener to hide the success container
             const successSvg = document.getElementById('success-svg');
             successSvg.addEventListener('click', hideSuccessContainer);
 
         } catch (error) {
             console.error('Error creating tournament:', error);
-            // Remove the success message and container
             successContainer.style.display = 'none';
-            // Display the error message
             const errorMessageElement = document.getElementById('error-message');
             errorMessageElement.textContent = 'An error occurred. Please try again.';
             const errorContainer = document.getElementById('error-container');
-            errorContainer.style.display = 'flex'; // Or 'block' based on your styling
+            errorContainer.style.display = 'flex';
 
-            // Add event listener to hide the error container
             const errorSvg = document.getElementById('error-svg');
             errorSvg.addEventListener('click', hideErrorContainer);
         }
     };
 
-    const getGroupName = (index) => {
-        const groupNames = ["GROUP A", "GROUP B", "GROUP C", "GROUP D", "GROUP E", "GROUP F", "GROUP G", "GROUP H",
-            "GROUP I", "GROUP J", "GROUP K", "GROUP L", "GROUP M", "GROUP N", "GROUP O", "GROUP P"];
-        const groupIndex = Math.floor(index / 4);
-        return groupNames[groupIndex];
-    };
-
     return (
-        <div>
-            <div
-                className="bg-slate-700 text-[15px] gap-2 p-2 flex drop-shadow-xl place-items-center place-content-center font-semibold text-slate-300">
-                <div className="bg-sky-400 px-3 text-[12px] drop-shadow-lg font-bold text-slate-900 rounded-xl">CREATE
-                    NEW TOURNAMENT
+        <div className="bg-slate-900 min-h-screen p-6 flex items-center justify-center">
+            <div className="max-w-4xl w-full bg-slate-800 rounded-xl shadow-2xl overflow-hidden">
+                <div className="bg-slate-700 p-8">
+                    <h1 className="text-3xl font-bold text-slate-300 text-center">Tạo Giải Đấu Mới</h1>
                 </div>
-            </div>
-            <div className="bg-slate-900 grid-rows-2 grid justify-center">
-                <div className="pt-10 pb-20 gap-2 ">
-                    <div id="processing-container" className="hidden bg-indigo-500 flex gap-2 mb-3 p-6 rounded-xl">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
-                             fill="none" viewBox="0 0 24 24" id="processing-svg">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
-                            <path className="opacity-75" fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <div className="p-8">
+                    <div id="processing-container" className="hidden bg-blue-100 p-4 rounded-lg mb-6 flex items-center">
+                        <svg className="animate-spin h-5 w-5 text-blue-500 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <div id="processing-message" className="text-indigo-200"></div>
+                        <div id="processing-message" className="text-blue-700">Đang xử lý...</div>
                     </div>
-                    <div id="success-container" className="hidden bg-green-200 flex gap-2 mb-3 p-6 rounded-xl">
-                        <CheckCircleIcon className="h-6 w-6 text-green-500" id="success-svg"/>
-                        <div id="success-message" className="text-green-500"></div>
+                    <div id="success-container" className="hidden bg-green-100 p-4 rounded-lg mb-6 flex items-center">
+                        <CheckCircleIcon className="h-5 w-5 text-green-500 mr-3" />
+                        <div id="success-message" className="text-green-700">Tạo giải đấu thành công!</div>
                     </div>
-                    <div id="error-container"
-                         className="hidden transition-all bg-red-200 flex mb-3 gap-2 p-6 rounded-xl">
-                        <XCircleIcon className="h-6 w-6 text-red-500" id="error-svg"/>
-                        <div id="error-message" className="text-red-500"></div>
+                    <div id="error-container" className="hidden bg-red-100 p-4 rounded-lg mb-6 flex items-center">
+                        <XCircleIcon className="h-5 w-5 text-red-500 mr-3" />
+                        <div id="error-message" className="text-red-700">Có lỗi xảy ra. Vui lòng thử lại.</div>
                     </div>
-                    <form
-                        className="grid w-[22rem] grid-cols-2 text-slate-300 gap-3  drop-shadow-xl bg-slate-950 p-5 rounded-xl"
-                        onSubmit={handleSubmit}>
-                        <label className="grid col-span-2 py-3 pb-0 text-slate-500 font-bold gap-1 text-[10px]">
-                            TOURNAMENT NAME
+                    <form className="space-y-8" onSubmit={handleSubmit}>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Hình ảnh giải đấu</label>
+                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-600 border-dashed rounded-lg bg-slate-700">
+                                <div className="space-y-1 text-center">
+                                    <svg className="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    <div className="flex text-sm text-slate-400">
+                                        <label htmlFor="file-upload" className="relative cursor-pointer bg-slate-700 rounded-md font-medium text-sky-500 hover:text-sky-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-sky-500">
+                                            <span>Tải lên một file</span>
+                                            <input
+                                                id="file-upload"
+                                                name="file-upload"
+                                                type="file"
+                                                className="sr-only"
+                                                onChange={handleImageChange}
+                                                required
+                                            />
+                                        </label>
+                                        <p className="pl-1 text-slate-300">hoặc kéo thả</p>
+                                    </div>
+                                    <p className="text-xs text-slate-400">PNG, JPG, GIF tối đa 10MB</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Tên giải đấu*</label>
                             <input
-                                className=" p-1 text-sm font-semibold rounded-lg text-slate-300 bg-slate-700 text-center"
                                 type="text"
-                                name="tournament_name"
-                                placeholder="Your tournament name..."
+                                className="mt-1 block w-full p-3 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                                placeholder="Nhập tên giải đấu..."
                                 value={formData.tournament_name}
-                                onChange={(e) => setFormData({...formData, tournament_name: e.target.value})}
+                                onChange={(e) => setFormData({ ...formData, tournament_name: e.target.value })}
                                 required
                             />
-                        </label>
-
-                        <label className="grid col-span-2 py-3 pb-0 text-slate-500 font-bold gap-1 text-[10px]">
-                            TOURNAMENT TYPE
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Số điện thoại*</label>
+                            <input
+                                type="text"
+                                className="mt-1 block w-full p-3 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                                placeholder="Nhập số điện thoại..."
+                                value={formData.phone_number}
+                                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Địa điểm*</label>
+                            <input
+                                type="text"
+                                className="mt-1 block w-full p-3 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                                placeholder="Nhập địa điểm..."
+                                value={formData.location}
+                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Hình thức thi đấu*</label>
                             <select
-                                className=" p-1 text-sm font-semibold rounded-lg text-slate-300 bg-slate-700 text-center"
-                                name="tournament_type"
-                                value={formData.tournament_type}
-                                onChange={(e) => setFormData({...formData, tournament_type: e.target.value})}
+                                className="mt-1 block w-full p-3 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                                value={formData.competition_format}
+                                onChange={(e) => setFormData({ ...formData, competition_format: e.target.value })}
                                 required
                             >
-                                <option value="Groups">Groups & Knockout</option>
-                                <option value="K/O">Knockout</option>
+                                <option value="Loại trực tiếp">Loại trực tiếp</option>
+                                <option value="Đấu vòng tròn">Đấu vòng tròn</option>
+                                <option value="Bảng đấu">Bảng đấu</option>
                             </select>
-                        </label>
-
-                        <label className="grid col-span-2 py-3 pb-0 text-slate-500 font-bold gap-1 text-[10px]">
-                            MATCHES PER DAY
-                            <select
-                                className="p-1 text-sm font-semibold  text-slate-300 bg-slate-700 rounded-lg  text-center"
-                                name="match_per_day"
-                                value={formData.match_per_day}
-                                onChange={(e) => setFormData({...formData, match_per_day: e.target.value})}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Số đội tham gia*</label>
+                            <input
+                                type="number"
+                                className="mt-1 block w-full p-3 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                                placeholder="Nhập số đội tham gia..."
+                                value={formData.number_of_teams}
+                                onChange={(e) => setFormData({ ...formData, number_of_teams: parseInt(e.target.value) || 0 })}
+                                min="1"
                                 required
-                            >
-                                <option value="1">1 Match</option>
-                                <option value="2">2 Matches</option>
-                            </select>
-                        </label>
+                            />
+                        </div>
 
-                        {formData.match_per_day === '1' && (
-                            <label className="grid col-span-2 py-3 pb-0 text-slate-500 font-bold gap-1 text-[10px]">
-                                MATCH TIME EVERYDAY (HH:MM)
-                                <input
-                                    className=" p-1 text-sm font-semibold rounded-lg text-slate-300 bg-slate-700 text-center"
-                                    type="time"
-                                    name="match_time_1"
-                                    value={formData.match_time_1}
-                                    onChange={(e) => setFormData({...formData, match_time_1: e.target.value})}
-                                    required
-                                />
-                            </label>
-                        )}
-
-                        {/* Conditionally render match_time_2 input */}
-                        {formData.match_per_day === '2' && (
-                            <div className="flex gap-3 place-content-stretch">
-                                <label
-                                    className="grid col-span-1 py-3 pb-0 text-slate-500  font-bold gap-1 text-[10px]">
-                                    FIRST MATCH TIME
-                                    <input
-                                        className=" p-1 w-[9.5rem] text-sm font-semibold rounded-lg text-slate-300 bg-slate-700 text-center"
-                                        type="time"
-                                        name="match_time_1"
-                                        value={formData.match_time_1}
-                                        onChange={(e) => setFormData({...formData, match_time_1: e.target.value})}
-                                        required
-                                    />
-                                </label>
-                                <label
-                                    className="grid col-span-1 py-3 pb-0  text-slate-500 font-bold gap-1 text-[10px]">
-                                    SECOND MATCH TIME
-                                    <input
-                                        className=" p-1 text-sm w-[9.2rem] font-semibold rounded-lg text-slate-300 bg-slate-700 text-center"
-                                        type="time"
-                                        name="match_time_2"
-                                        value={formData.match_time_2}
-                                        onChange={(e) => setFormData({...formData, match_time_2: e.target.value})}
-                                        required
-                                    />
-                                </label>
-                            </div>
-
-
-                        )}
-
-                        <label className="grid col-span-2 py-3 pb-0 text-slate-500 font-bold gap-1 text-[10px]">
-                            TEAMS SELECTION
-                            <select
-                                className="p-1 text-sm font-semibold  mb-5 text-slate-300 bg-slate-700 rounded-lg  text-center"
-                                name="teams_selection"
-                                value={formData.teams_selection}
-                                onChange={handleTeamsSelectionChange}
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Số lượng thành viên</label>
+                            <input
+                                type="number"
+                                className="mt-1 block w-full p-3 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                                placeholder="Nhập số đội thành viên..."
+                                value={formData.number_of_members}
+                                onChange={(e) => setFormData({ ...formData, number_of_members: parseInt(e.target.value) || 0 })}
+                                min="1"
                                 required
+                            />
+                        </div>
+                        <div>
+                            <button
+                                type="submit"
+                                className="w-full bg-sky-500 hover:bg-sky-600 text-slate-900 p-4 rounded-lg font-semibold transition duration-300 transform hover:scale-105"
                             >
-                                <option value="4">4 Teams</option>
-                                <option value="8">8 Teams</option>
-                                <option value="16">16 Teams</option>
-                                <option value="32">32 Teams</option>
-                                <option value="64">64 Teams</option>
-                            </select>
-                        </label>
-
-
-                        {formData.clubs.map((club, index) => (
-                            <div className="grid justify-center grid-cols-3 gap-1" key={index}>
-                                <label className="grid content-center text-slate-500 font-bold text-[10px]">
-                                    {getGroupName(index)}
-                                </label>
-                                <select
-                                    className="grid p-1 transition-all col-span-2 w-auto text-sm font-semibold rounded-lg
-                                text-slate-300 bg-slate-700 text-center"
-                                    name="club"
-                                    value={club.club_name}
-                                    onChange={(e) => handleChange(e, index)}
-                                    required
-                                >
-                                    {/* Show the selected club in the "Select a club" option */}
-                                    {selectedClubs[index] && (
-                                        <option value={selectedClubs[index]}>{selectedClubs[index]}</option>
-                                    )}
-
-                                    <option value=""> - - - -</option>
-                                    {availableClubs.map((club) => (
-                                        <option key={club.id} value={club.club_name}>
-                                            {club.club_name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        ))}
-
-
-                        <button className="bg-sky-500 hover:bg-sky-700 px-5 py-2 my-3 text-sm leading-5 rounded-full
-                            font-semibold col-span-2 text-slate-900 justify-self-center" type="submit">
-                            Create Tournament
-                        </button>
+                                Tạo Giải Đấu
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
-
         </div>
     );
 };
