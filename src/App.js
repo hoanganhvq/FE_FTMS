@@ -1,21 +1,21 @@
 import logo from './logo.svg';
 import './App.css';
 import Example from "./components/gettingGroupTabs";
-import NewTournamentForm from "./components/ftms";
+import NewTournamentForm from "./pages/ftms";
 import {Box, Component} from "./components/new";
 import Testing from "./components/testing";
 import Figma from "./components/figma";
 import Index from "./components";
 import Tournaments from "./components/tournaments";
 import Matches from "./components/matches";
-import ClubsDetails from "./components/teams";
+import ClubsDetails from "./pages/teams";
 import TournamentDetails from "./components/tournamentGroups";
 import MatchesNew from "./components/matchesNewDesign";
 import YourComponent from "./components/formatingDateTime";
 import {BrowserRouter as Router, Route, Routes, useParams,} from "react-router-dom";
 import Skeletontest from "./components/skeletontest";
 import Layout from "./components/Layout";
-import ClubForm from "./components/clubForm";
+import ClubForm from "./pages/clubForm";
 import PhoneNumberInput from "./components/phoneNumberInput";
 import PhoneNumberValidation from "./components/phoneNumberInput";
 import QuarterfinalBrackets, {QualifyMatchBracket, QualifyTeamBracket} from "./components/qualifyMatch";
@@ -28,13 +28,16 @@ import RoundOf32 from "./components/roundOf32";
 import DevelopmentWarning from "./components/DevelopmentWarning";
 import TimePickerViewRenderers from "./components/timePicker";
 import CustomTimePicker from "./components/customTimePicker";
-import Home from "./components/Home";
+import Home from "./pages/Home";
 import GetGroups from "./components/gettingGroupTabs";
 import DisExample from "./components/Disclosure";
-import SignUp from "./components/signUp";
-import SignIn from "./components/signIn";
-import TournamentInformation from './components/tournamentInfo';
-import TeamDetail from './components/teamDetail';
+import SignUp from "./pages/signUp";
+import SignIn from "./pages/signIn";
+import TournamentInformation from './pages/tournamentInfo';
+import TeamDetail from './pages/teamDetail';
+import ManageTournament from './pages/manageTournament';
+import TournamentList from './pages/tournamentList';
+import ManageClub from './pages/manageClub';
 function App() {
     function ComponentWithTournamentId({component: Component}) {
         const {id} = useParams(); // Get the captured tournamentId from the URL
@@ -48,6 +51,12 @@ function App() {
             <Routes>
                 <Route path="/" element={<Layout/>}>
                     <Route index element={<Home/>}/>
+                    <Route path="/sign-in" element={<SignIn/>}/>
+                    <Route path="/Home" element={<Home/>}/>
+                    <Route path="/manage-clubs" element={<ManageClub/>} />
+                    <Route path="/sign-up" element={<SignUp/>}/>
+                    <Route path="/manage-tournaments/:id" element={<ManageTournament/>}/>
+                    <Route path="/tournaments-list" element={<TournamentList/>}/>
                     <Route path="/tournament/:id" element={<TournamentInformation/>}/>
                     <Route path="/tournaments" element={<TournamentDetails/>}/>
                     <Route path="/clubs" element={<ClubsDetails/>}/>

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Table from "./table";
-import Matches from "./matches";
-import Groups from "./groups";
+import Table from "../components/table";
+import Matches from "../components/matches";
+import Groups from "../components/groups";
 import config from "../config.json"
 import { TrophyIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { SparklesIcon } from "@heroicons/react/20/solid";
-import TournamentCardSkeleton from "./TournamentSkeleton";
+import TournamentCardSkeleton from "../components/TournamentSkeleton";
 import { useLocation, useNavigate } from "react-router-dom";
 const ClubsDetailsSkeleton = () => {
     return (
@@ -330,61 +330,57 @@ const ClubsDetails = () => {
     //     }
     // }
     return (
-        <div>
-            <div
-                className="bg-slate-700 text-[15px] mb-7 gap-2 p-2 flex drop-shadow-xl place-items-center place-content-center font-semibold text-slate-300">
-                <div className="bg-sky-400 px-3 text-[12px] drop-shadow-lg font-bold text-slate-900 rounded-xl">ALL
-                    CLUBS
-                </div>
+        <div className="flex flex-col items-center p-8 bg-gray-900 min-h-screen">
+            {/* Header */}
+            <div className="relative w-full max-w-4xl flex items-center justify-center bg-gradient-to-r from-sky-600 to-blue-500 text-white py-4 px-6 rounded-xl shadow-xl mb-8">
+                <SparklesIcon className="w-7 h-7 text-white mr-3 animate-pulse" />
+                <span className="text-xl font-extrabold tracking-wide uppercase">Danh Sách Các Câu Lạc Bộ</span>
             </div>
-            <div className="bg-slate-900 grid justify-center p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-6xl">
-                    {clubs.map(Club => (
-                        <div
-                            onClick = {()=>handleNavigate(Club)}
-                            key={Club.pk}
-                            className="bg-slate-950 rounded-xl p-4 shadow-lg ring-1 ring-sky-500 transition-all ease-out duration-500 hover:bg-slate-900 hover:ring-2 hover:shadow-xl"
-                        >
-                            <div className="flex items-center space-x-3">
-                                <img
-                                    src={Club.club_image}
-                                    className="w-20 h-20 rounded-lg shadow-md"
-                                    alt="CLB"
-                                />
-                                <div>
-                                    <div className="text-xs text-slate-400">TÊN CÂU LẠC BỘ</div>
-                                    <div className="text-md font-semibold text-sky-500">{Club.club_name}</div>
-                                </div>
-                            </div>
-                            <div className="mt-4 space-y-2 text-sm text-sky-500">
-                                <div>
-                                    <div className="text-xs text-slate-400">ĐỘI TRƯỞNG</div>
-                                    <div>{Club.captain_name}</div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-slate-400">SỐ ĐIỆN THOẠI</div>
-                                    <div>{Club.phone_number}</div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-slate-400">NĂM THÀNH LẬP</div>
-                                    <div>{Club.founded_year}</div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-slate-400">ĐỊA CHỈ</div>
-                                    <div>{Club.address}</div>
-                                </div>
+
+            {/* Club Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 w-full max-w-6xl">
+                {clubs.map((club) => (
+                    <div
+                        key={club.pk}
+                        onClick={() => handleNavigate(club)}
+                        className="bg-gray-800 rounded-xl p-4 shadow-lg transition-all duration-500 hover:scale-105 hover:shadow-2xl cursor-pointer"
+                    >
+                        {/* Club Header */}
+                        <div className="flex items-center space-x-3">
+                            <img
+                                src={club.club_image}
+                                className="w-20 h-20 rounded-md shadow-md"
+                                alt="CLB"
+                            />
+                            <div>
+                                <div className="text-xs text-gray-400 uppercase">Tên Câu Lạc Bộ</div>
+                                <div className="text-md font-semibold text-blue-400">{club.club_name}</div>
                             </div>
                         </div>
-                    ))}
-                </div>
+
+                        {/* Club Info */}
+                        <div className="mt-4 text-xs text-blue-300 space-y-2">
+                            <div>
+                                <div className="text-gray-400 uppercase">Đội Trưởng</div>
+                                <div className="font-medium">{club.captain_name}</div>
+                            </div>
+                            <div>
+                                <div className="text-gray-400 uppercase">Số Điện Thoại</div>
+                                <div className="font-medium">{club.phone_number}</div>
+                            </div>
+                            <div>
+                                <div className="text-gray-400 uppercase">Năm Thành Lập</div>
+                                <div className="font-medium">{club.founded_year}</div>
+                            </div>
+                            <div>
+                                <div className="text-gray-400 uppercase">Địa Chỉ</div>
+                                <div className="font-medium">{club.address}</div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
-
-
-
-
-
         </div>
-
     );
 };
 
