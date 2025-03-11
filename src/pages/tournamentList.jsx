@@ -1,10 +1,28 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-
+import { useEffect, useState } from "react";
+import { getTournaments } from "../api/tounamentAPI";
 const TournamentList = () => {
     const navigate = useNavigate();
+    const [giaidau, setGiaiDau] = useState([]);
 
+    const fetchMatched = async()=>{
+        try{
+            const res = await getTournaments();
+            setGiaiDau(res);
+        } catch(err){
+            console.log('Error fetching matches: ',err);
+        }
+    }
+
+    useEffect(()=>{
+        fetchMatched();
+    },[])
+
+    useEffect(() => {
+        console.log('Giai dau bao gom: ', giaidau);
+      }, [giaidau]);
     // Danh sách giải đấu
     const tournaments = [
         { id: 1, name: "Giải đấu A", format: "Bảng đấu", numberClubs: 10, startDate: "2024-03-15", teamsToAdvance:4},
