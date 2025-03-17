@@ -51,3 +51,14 @@ export const updateTeam = async(id, teamData) =>{
         throw error;
     }
 }
+
+export const getTeamsById = async(ids) =>{
+    try{
+        //Remember array should to recover by  { }
+        const res = await axios.post(`${API_URL}/getMany`, {ids});
+        return res.data;
+    }catch(error){
+        console.error("Error fetching teams ", error);
+        throw error;
+    }
+}

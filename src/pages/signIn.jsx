@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
-
+import {login} from '../api/userAPI';
+import { toast } from 'react-toastify';
 const SignIn = () => {
     const navigate = useNavigate(); // Hook điều hướng
     const [formInfo, setFormInfo] = useState({
@@ -17,19 +18,30 @@ const SignIn = () => {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
         if (formInfo.password.length < 6) {
             setError('Password must be at least 6 characters');
             return;
         }
+         try{
+            const res = await login(formInfo);
+            const {token, user} = res;
 
-        setError('');
-        console.log("Form Submitted:", formInfo);
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            toast.success(`Welcome back, ${user.name}!`, {
+                onClose: () => navigate('/home'),
+                autoClose: 1500,
+            });
+            navigate('/home');
+            setError('');
 
-        // Điều hướng sang trang SignUp sau khi đăng nhập thành công
-        navigate('/signUp');
+         } catch(err){
+            setError(err.response.data.message || 'Invalid email or password');
+         }
+
     };
 
     return (
@@ -69,6 +81,7 @@ const SignIn = () => {
                     {/* Submit Button */}
                     <button
                         type="submit"
+
                         className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-md transition-all duration-300"
                     >
                         Sign In
@@ -76,7 +89,7 @@ const SignIn = () => {
 
                     {/* Register Link */}
                     <p className="text-center text-sm text-gray-400 mt-3">
-                        Don't have an account? <Link to="/signUp" className="text-blue-400 hover:underline">Sign up</Link>
+                        Don't have an account? <Link to="/sign-up" className="text-blue-400 hover:underline">Sign up</Link>
                     </p>
                 </form>
             </div>

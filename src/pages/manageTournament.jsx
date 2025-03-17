@@ -4,14 +4,16 @@ import GeneralNews from '../components/generalNews';
 import Ranking from '../components/ranking';
 import GroupStage from '../components/groupStage';
 import KnockoutStage from '../components/knockoutStage';
+import DivideGroups from '../components/divideGroup';
+import LoadingScreen from "./loadingScreen";
 
 const ManageTournament = () => {
     const [activeTab, setActiveTab] = useState('tin-chung');
+    const [loading, setLoading] = useState(false);
     const { id } = useParams(); // Lấy id từ URL
     const location = useLocation(); // Lấy state từ navigation
-    console.log('Location State:', location.state); // Debug: Kiểm tra dữ liệu được truyền
     const { tournament } = location.state || {}; // Lấy thông tin giải đấu từ state
-
+    const [teams, setTeams] = useState([]);
     const fakeTeamsData = [
         {
             id: 1,
@@ -67,6 +69,8 @@ const ManageTournament = () => {
         },
     ];
 
+    
+
     // Kiểm tra nếu không có dữ liệu giải đấu
     if (!tournament) {
         return (
@@ -83,7 +87,7 @@ const ManageTournament = () => {
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-600 to-teal-600 p-6 rounded-t-3xl mb-6 animate-pulse-slow">
                     <h1 className="text-3xl md:text-4xl font-extrabold text-white text-center uppercase tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white/80 to-sky-200 animate-gradient">
-                        Quản Lý Giải Đấu: {tournament.name}
+                        {tournament.name}
                     </h1>
                 </div>
 
@@ -125,12 +129,14 @@ const ManageTournament = () => {
                     >
                         Bảng Xếp Hạng
                     </button>
+                
+
                 </div>
 
                 {/* Nội dung tab */}
                 <div className="min-h-[400px] animate-fade-in">
                     {activeTab === 'tin-chung' && (
-                        <GeneralNews />
+                        <GeneralNews tournament={tournament}/>
                     )}
                     {activeTab === 'lich-thi-dau' && (
                         <GroupStage tournament={tournament} />
@@ -142,7 +148,7 @@ const ManageTournament = () => {
                         <KnockoutStage tournament={tournament} fakeTeamsData={fakeTeamsData} />
                     )}
                     {activeTab === 'bang-xep-hang' && (
-                        <Ranking tournament={tournament} fakeTeamsData={fakeTeamsData} />
+                        <Ranking tournament={tournament} groups={tournament.groups}/>
                     )}
                 </div>
             </div>

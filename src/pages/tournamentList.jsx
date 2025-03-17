@@ -2,42 +2,43 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { getTournaments } from "../api/tounamentAPI";
+import { getTournamentsByUserId } from "../api/tounamentAPI";
+import LoadingScreen from "./loadingScreen";
+
+
 const TournamentList = () => {
     const navigate = useNavigate();
-    const [giaidau, setGiaiDau] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [tournaments, setTournaments] = useState([]);
 
-    const fetchMatched = async()=>{
-        try{
-            const res = await getTournaments();
-            setGiaiDau(res);
-        } catch(err){
-            console.log('Error fetching matches: ',err);
+    const fetchTournament = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await getTournamentsByUserId(token); // truyền token, không phải userId
+            setTournaments(res);
+        } catch (err) {
+            console.log('Error fetching Tournament: ', err);
+        } finally {
+            setLoading(false);
         }
     }
 
-    useEffect(()=>{
-        fetchMatched();
-    },[])
-
     useEffect(() => {
-        console.log('Giai dau bao gom: ', giaidau);
-      }, [giaidau]);
-    // Danh sách giải đấu
-    const tournaments = [
-        { id: 1, name: "Giải đấu A", format: "Bảng đấu", numberClubs: 10, startDate: "2024-03-15", teamsToAdvance:4},
-        { id: 2, name: "Giải đấu B", format: "Vòng tròn", numberClubs: 12, startDate: "2024-04-10" },
-        { id: 3, name: "Giải đấu C", format: "Bảng đấu", numberClubs: 12, startDate: "2024-05-01" ,teamsToAdvance:8},
-        { id: 4, name: "Giải đấu D", format: "Bảng đấu", numberClubs: 7, startDate: "2024-06-20" , teamsToAdvance:2},
-        { id: 5, name: "Giải đấu E", format: "Vòng tròn", numberClubs: 6, startDate: "2024-07-05" },
-        { id: 6, name: "Giải đấu F", format: "Vòng tròn", numberClubs: 4, startDate: "2024-08-12" },
-    ];
+        fetchTournament();
+        const token = localStorage.getItem('token');
+        console.log("token: ", token)
+    }, [])
+
 
     const handleTournamentClick = (tournament) => {
-        navigate(`/manage-tournaments/${tournament.id}`, { state: { tournament } });
+        navigate(`/manage-tournaments/${tournament._id}`, { state: { tournament } });
         console.log("hello: ", tournament);
     };
 
+    if(!tournaments || loading) {
+        return <LoadingScreen />
+    }
     return (
         <div className="p-6 min-h-screen bg-gray-950 text-white">
             {/* Header */}
@@ -59,30 +60,64 @@ const TournamentList = () => {
 
             {/* Danh sách giải đấu */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {tournaments.map((tournament, index) => (
-                    <motion.div
-                        key={tournament.id}
-                        onClick={() => handleTournamentClick(tournament)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.97 }}
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1, duration: 0.4 }}
-                        className="p-6 border border-gray-700 rounded-2xl bg-gray-800 hover:bg-gray-700 shadow-lg cursor-pointer transform transition duration-300"
-                    >
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-bold text-white">{tournament.name}</h2>
-                            <span className="px-3 py-1 text-sm font-medium rounded-full bg-blue-500 text-white">
-                                {tournament.format}
-                            </span>
-                        </div>
-                        <div className="text-gray-300">
-                            <p className="text-sm">Số đội: <span className="font-semibold text-gray-100">{tournament.numberClubs}</span></p>
-                            <p className="text-sm">Bắt đầu: <span className="font-semibold text-gray-100">{tournament.startDate}</span></p>
-                        </div>
-                    </motion.div>
-                ))}
+                {tournaments.map((tournament, index) => {
+                    // Gán màu theo status
+                    const statusColorMap = {
+                        Upcoming: "bg-green-500",
+                        Ongoing: "bg-yellow-500",
+                        Ended: "bg-red-500"
+                    };
+
+                    const status = tournament.status || "Upcoming";
+                    const tagColor = statusColorMap[status] || "bg-gray-500";
+
+                    return (
+                        <motion.div
+                            key={tournament.id}
+                            onClick={() => handleTournamentClick(tournament)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.97 }}
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1, duration: 0.4 }}
+                            className="p-6 rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 shadow-lg border border-gray-700 cursor-pointer transition duration-300"
+                        >
+                            {/* Tiêu đề và trạng thái */}
+                            <div className="flex justify-between items-start mb-4">
+                                <h2 className="text-xl font-bold text-white leading-tight">{tournament.name}</h2>
+                                <span className={`px-3 py-1 text-xs font-bold rounded-full ${tagColor} text-white shadow-md`}>
+                                    {status}
+                                </span>
+                            </div>
+
+                            {/* Thông tin giải đấu */}
+                            <div className="space-y-2 text-sm text-gray-300">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-blue-400 font-medium">Thể thức:</span>
+                                    <span className="text-white font-semibold">{tournament.format}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-blue-400 font-medium">Số đội:</span>
+                                    <span className="text-white font-semibold">{tournament.number_of_teams}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-blue-400 font-medium">Bắt đầu:</span>
+                                    <span className="text-white font-semibold">
+                                        {new Date(tournament.time_start).toLocaleDateString('vi-VN')}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="mt-4 border-t border-gray-700 pt-3 text-right">
+                                <span className="text-sm italic text-gray-400">Nhấn để xem chi tiết</span>
+                            </div>
+                        </motion.div>
+                    );
+                })}
             </div>
+
+
         </div>
     );
 };

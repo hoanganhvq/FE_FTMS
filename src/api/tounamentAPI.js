@@ -52,3 +52,18 @@ export const updateTournament = async(id, tournamentData) =>{
     throw err;
   }
 }
+
+
+export const getTournamentsByUserId = async (token) => {
+  try {
+    const res = await axios.get(`${API_URL}/my-tournament`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return res.data;
+  } catch (err) {
+    console.log('Error fetching tournaments:', err);
+    throw err;
+  }
+};

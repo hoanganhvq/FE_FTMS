@@ -9,7 +9,7 @@ import Index from "./components";
 import Tournaments from "./components/tournaments";
 import Matches from "./components/matches";
 import ClubsDetails from "./pages/teams";
-import TournamentDetails from "./components/tournamentGroups";
+import TournamentDetails from "./pages/tournamentGroups";
 import MatchesNew from "./components/matchesNewDesign";
 import YourComponent from "./components/formatingDateTime";
 import {BrowserRouter as Router, Route, Routes, useParams,} from "react-router-dom";

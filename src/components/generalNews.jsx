@@ -1,116 +1,104 @@
 import React from "react";
 
-const GeneralNews = () => {
+const GeneralNews = ({ tournament }) => {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Cột nhỏ - Lịch thi đấu */}
-            <div className="md:col-span-1">
-                <h3 className="text-lg font-semibold mb-2 text-white">Lịch thi đấu</h3>
-                <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-                    <div className="flex justify-between items-center mb-4">
-                        <span className="text-gray-400">Toàn bộ lịch thi đấu</span>
-                        <button className="text-blue-500 hover:text-blue-400 transition-colors">
-                            Xem thêm
-                        </button>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* Lịch thi đấu và thông tin */}
+            <div className="md:col-span-1 space-y-6">
+                {/* Lịch thi đấu */}
+                <div className="bg-gray-800 p-5 rounded-2xl shadow-xl">
+                    <h3 className="text-xl font-bold text-white mb-4">🗓️ Lịch thi đấu</h3>
+                    <div className="space-y-3">
+                        {[1, 2, 3].map((_, index) => (
+                            <div
+                                key={index}
+                                className="p-4 rounded-xl bg-gray-700 hover:bg-gray-600 transition-all duration-200 border border-gray-600"
+                            >
+                                <p className="text-white font-medium">Đội #{index * 2 + 1} vs Đội #{index * 2 + 2}</p>
+                                <p className="text-sm text-gray-400">10:00 - 12:00</p>
+                            </div>
+                        ))}
                     </div>
-                    <div className="space-y-2">
-                        {/* Trận đấu 1 */}
-                        <div className="p-3 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-white">Đội #1 vs Đội #2</p>
-                            <p className="text-sm text-gray-400">10:00 - 12:00</p>
-                        </div>
-                        {/* Trận đấu 2 */}
-                        <div className="p-3 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-white">Đội #3 vs Đội #4</p>
-                            <p className="text-sm text-gray-400">14:00 - 16:00</p>
-                        </div>
-                        {/* Trận đấu 3 */}
-                        <div className="p-3 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-white">Đội #5 vs Đội #6</p>
-                            <p className="text-sm text-gray-400">18:00 - 20:00</p>
-                        </div>
-                    </div>
+                    <button className="mt-4 w-full text-blue-400 hover:text-blue-300 text-sm font-semibold transition-colors">
+                        ➕ Xem toàn bộ lịch
+                    </button>
                 </div>
 
-                {/* Thông tin ngày và địa điểm thi đấu */}
-                <div className="mt-4 bg-gray-800 p-4 rounded-lg shadow-lg">
-                    <h4 className="text-md font-semibold mb-2 text-white">Thông tin chung</h4>
-                    <div className="space-y-2">
-                        <div className="p-3 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
+                {/* Thông tin chung */}
+                <div className="bg-gray-800 p-5 rounded-2xl shadow-xl">
+                    <h3 className="text-xl font-bold text-white mb-4">Thông tin chung</h3>
+                    <div className="space-y-3">
+                        <div className="bg-gray-700 p-4 rounded-xl border border-gray-600">
                             <p className="text-white">Ngày thi đấu</p>
-                            <p className="text-sm text-gray-400">25/10/2023 - 27/10/2023</p>
+                            <p className="text-sm text-gray-400">
+                                {new Date(tournament.time_start).toLocaleDateString("vi-VN")}
+                            </p>
                         </div>
-                        <div className="p-3 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-white">Địa điểm thi đấu</p>
-                            <p className="text-sm text-gray-400">Sân vận động A, B, C</p>
+                        <div className="bg-gray-700 p-4 rounded-xl border border-gray-600">
+                            <p className="text-white">Địa điểm</p>
+                            <p className="text-sm text-gray-400">{tournament.location}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Cột rộng - Thống kê tổng quát */}
-            <div className="md:col-span-3">
-                <h3 className="text-lg font-semibold mb-2 text-white">Thống kê tổng quát</h3>
-                <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-                    {/* Nhóm 1: Thống kê trận đấu */}
-                    <h4 className="text-md font-semibold mb-2 text-gray-300">Thống kê trận đấu</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div className="p-4 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-gray-400">Số bàn thắng</p>
-                            <p className="text-xl font-bold text-blue-500">0</p>
-                        </div>
-                        <div className="p-4 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-gray-400">Số bàn thua</p>
-                            <p className="text-xl font-bold text-red-500">0</p>
-                        </div>
-                        <div className="p-4 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-gray-400">Tổng số trận đấu</p>
-                            <p className="text-xl font-bold text-green-500">5</p>
-                        </div>
-                        <div className="p-4 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-gray-400">Tổng số thẻ phạt</p>
-                            <p className="text-xl font-bold text-yellow-500">0</p>
-                        </div>
-                    </div>
+            {/* Thống kê tổng quát */}
+            <div className="md:col-span-3 bg-gray-800 p-6 rounded-2xl shadow-xl space-y-8">
+                {/* Tiêu đề */}
+                <h2 className="text-2xl font-bold text-white">📊 Thống kê tổng quát</h2>
 
-                    {/* Nhóm 2: Thành tích đặc biệt */}
-                    <h4 className="text-md font-semibold mb-2 text-gray-300">Thành tích đặc biệt</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                        <div className="p-4 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-gray-400">Trận nhiều bàn nhất</p>
-                            <p className="text-xl font-bold text-purple-500">? - ?</p>
-                        </div>
-                        <div className="p-4 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-gray-400">Trận nhiều thẻ nhất</p>
-                            <p className="text-xl font-bold text-pink-500">? - ?</p>
-                        </div>
-                        <div className="p-4 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-gray-400">Số VĐV tham dự</p>
-                            <p className="text-xl font-bold text-indigo-500">0</p>
-                        </div>
-                    </div>
-
-                    {/* Nhóm 3: Thống kê đội bóng */}
-                    <h4 className="text-md font-semibold mb-2 text-gray-300">Thống kê đội bóng</h4>
+                {/* Thống kê trận đấu */}
+                <section>
+                    <h4 className="text-lg font-semibold text-gray-300 mb-4">⚽ Trận đấu</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="p-4 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-gray-400">Đội ghi nhiều bàn nhất</p>
-                            <p className="text-xl font-bold text-teal-500">0</p>
-                        </div>
-                        <div className="p-4 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-gray-400">Đội nhiều thẻ nhất</p>
-                            <p className="text-xl font-bold text-orange-500">0</p>
-                        </div>
-                        <div className="p-4 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-gray-400">Cầu thủ nhiều thẻ nhất</p>
-                            <p className="text-xl font-bold text-cyan-500">0</p>
-                        </div>
-                        <div className="p-4 border border-gray-700 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-                            <p className="text-gray-400">Tổng số thẻ vàng</p>
-                            <p className="text-xl font-bold text-amber-500">0</p>
-                        </div>
+                        {[
+                            { label: "Số bàn thắng", value: "0", color: "text-blue-500" },
+                            { label: "Số bàn thua", value: "0", color: "text-red-500" },
+                            { label: "Tổng số trận đấu", value: "5", color: "text-green-500" },
+                            { label: "Tổng số thẻ phạt", value: "0", color: "text-yellow-500" },
+                        ].map((stat, i) => (
+                            <div key={i} className="bg-gray-700 p-5 rounded-xl border border-gray-600 hover:bg-gray-600 transition">
+                                <p className="text-gray-400">{stat.label}</p>
+                                <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                            </div>
+                        ))}
                     </div>
-                </div>
+                </section>
+
+                {/* Thành tích đặc biệt */}
+                <section>
+                    <h4 className="text-lg font-semibold text-gray-300 mb-4">🏅 Thành tích đặc biệt</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {[
+                            { label: "Trận nhiều bàn nhất", value: "? - ?", color: "text-purple-400" },
+                            { label: "Trận nhiều thẻ nhất", value: "? - ?", color: "text-pink-400" },
+                            { label: "Số VĐV tham dự", value: "0", color: "text-indigo-400" },
+                        ].map((stat, i) => (
+                            <div key={i} className="bg-gray-700 p-5 rounded-xl border border-gray-600 hover:bg-gray-600 transition">
+                                <p className="text-gray-400">{stat.label}</p>
+                                <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Thống kê đội bóng */}
+                <section>
+                    <h4 className="text-lg font-semibold text-gray-300 mb-4">🏟️ Đội bóng</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                            { label: "Đội ghi nhiều bàn nhất", value: "0", color: "text-teal-400" },
+                            { label: "Đội nhiều thẻ nhất", value: "0", color: "text-orange-400" },
+                            { label: "Cầu thủ nhiều thẻ nhất", value: "0", color: "text-cyan-400" },
+                            { label: "Tổng số thẻ vàng", value: "0", color: "text-amber-400" },
+                        ].map((stat, i) => (
+                            <div key={i} className="bg-gray-700 p-5 rounded-xl border border-gray-600 hover:bg-gray-600 transition">
+                                <p className="text-gray-400">{stat.label}</p>
+                                <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
             </div>
         </div>
     );
