@@ -21,3 +21,16 @@ export const updateMatch = async(id, matchData) =>{
         throw error;
     }
 }
+
+
+
+
+export const getMatchesByTournamentId = async(id) => {
+    try{
+        const res = await axios.get(`${API_URL}/${id}`);
+        return res.data;
+    } catch(error){
+        console.error('Error updating match:', error);
+        
+    }
+}

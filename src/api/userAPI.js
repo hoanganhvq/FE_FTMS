@@ -14,7 +14,9 @@ export const register = async (userData) => {
 
 export const login = async (userData) => {
     try {
-        const res = await axios.post(`${API_URL}/login`, userData);
+        const res = await axios.post(`${API_URL}/login`, userData, 
+            {withCredentials:true},
+        );
         return res.data;
     } catch (error) {
         console.error('Error logging in user:', error);
@@ -22,16 +24,14 @@ export const login = async (userData) => {
     }
 };
 
-export const getMe = async(token)=>{
-    try{
-        const res = await axios.get(`${API_URL}/me`,{
-            headers: {Authorization: `Bearer ${token}`} //You can use interceptor to get token
-        });
-
-        return res.data
-    } catch(error){
-        console.error("Error fetching User data: ", error);
-        throw error;
+export const getMe = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/me`, {
+        withCredentials: true,
+      });
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching user data:", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to fetch user data");
     }
-}
-
+  };

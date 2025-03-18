@@ -1,7 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 import Example from "./components/gettingGroupTabs";
-import NewTournamentForm from "./pages/ftms";
+import NewTournamentForm from "./pages/tournamentForm";
 import {Box, Component} from "./components/new";
 import Testing from "./components/testing";
 import Figma from "./components/figma";

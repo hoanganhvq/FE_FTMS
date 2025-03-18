@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronDoubleLeftIcon, TrophyIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import TournamentCardSkeleton from "../components/TournamentSkeleton";
 import LoadingScreen from './loadingScreen';
-import { getTournaments } from '../api/tounamentAPI';
+import { getTournaments, updateTournament } from '../api/tounamentAPI';
 const TournamentLabel = ({ selectedTournament }) => {
     return (
         <div
@@ -49,17 +49,54 @@ const TournamentDetails = () => {
             setLoading(false);
         }
     }
-
     useEffect(() => {
-        fetchTournament();
-        console.log('tournament: ', tournaments);
-    }, [])
+        fetchTournament(); // fetchTournament sẽ cập nhật state tournaments
+    }, []);
+    
+    useEffect(() => {
+        const updateStatusTournament = async () => {
+            if (tournaments && tournaments.length > 0) {
+                const now = Date.now();
+    
+                const tournamentsToUpdate = tournaments.filter(t => {
+                    const startTime = new Date(t.time_start).getTime();
+                    return startTime <= now && t.status !== 'Ongoing';
+                });
+    
+                console.log('Tournaments to update:', tournamentsToUpdate);
+    
+                for (const tournament of tournamentsToUpdate) {
+                    const updatedTournament = { ...tournament, status: 'Ongoing' };
+                    try {
+                        await updateTournament(tournament._id, updatedTournament);
+                        console.log('Updated:', tournament._id);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
+    
+                if (tournamentsToUpdate.length > 0) {
+                    fetchTournament();
+                }
+            }
+        };
+    
+        updateStatusTournament();
+    }, [tournaments]);
+    
+    
+    
 
 
 
-    const handleNavigate = tournament => {
-        navigate(`/tournament/${tournament._id}`);
+    const handleNavigate = (tournament) => {
+        if (tournament.status === 'Upcoming') {
+            navigate(`/tournament/${tournament._id}`);
+        } else {
+            navigate(`/manage-tournaments/${tournament._id}`, { state: { tournament } });
+        }
     };
+    
 
     const getStatusTag = (status) => {
         switch (status) {
@@ -73,6 +110,7 @@ const TournamentDetails = () => {
                 return null;
         }
     };
+
 
     if (error) {
         return (

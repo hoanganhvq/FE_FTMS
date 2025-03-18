@@ -5,7 +5,7 @@ import { XCircleIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
 
 const NewTournamentForm = () => {
     const [formData, setFormData] = useState({
-        tournament_image: null,
+        logo: null,
         tournament_name: '',
         phone_number: '',
         location: '',

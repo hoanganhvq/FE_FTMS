@@ -36,7 +36,7 @@ export const createGroup = async (id, groupData) => {
 
 export const createGroupMatches = async(groupData) =>{
     try{
-        const res = await axios.post(`${API_URL}/generate-matches`, groupData);
+        const res = await axios.post(`${API_URL}/generate-matches`, {groups: groupData});
         return res.data;
     }catch(error){
         console.log("Error creating group matches: ", error);

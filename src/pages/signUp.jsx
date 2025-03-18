@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 const SignUp = () => {
     const navigate = useNavigate();
     const [formInfo, setFormInfo] = useState({
-        fullName: '',
+        name: '',
         email: '',
         password: '',
     });
@@ -30,7 +30,7 @@ const SignUp = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
     
-        if (formInfo.fullName.trim() === '') {
+        if (formInfo.name.trim() === '') {
             setError('Full name is required.');
             return;
         }
@@ -86,9 +86,9 @@ const SignUp = () => {
                         <input
                             className="mt-1 w-full p-3 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
                             type="text"
-                            name="fullName"
+                            name="name"
                             placeholder="Enter full name..."
-                            value={formInfo.fullName}
+                            value={formInfo.name}
                             onChange={handleChange}
                         />
                     </div>

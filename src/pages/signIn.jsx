@@ -11,6 +11,7 @@ const SignIn = () => {
 
     const [error, setError] = useState('');
 
+
     const handleChange = (e) => {
         setFormInfo({
             ...formInfo,
@@ -30,6 +31,7 @@ const SignIn = () => {
             const {token, user} = res;
 
             localStorage.setItem('token', token);
+            console.log('Token: ', token)
             localStorage.setItem('user', JSON.stringify(user));
             toast.success(`Welcome back, ${user.name}!`, {
                 onClose: () => navigate('/home'),

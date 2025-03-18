@@ -67,3 +67,13 @@ export const getTournamentsByUserId = async (token) => {
     throw err;
   }
 };
+
+export const addTeamToTournament = async(teamData)=>{
+  try{
+    const res = await axios.post(`${API_URL}/add-team`,teamData);
+    return res.data;
+  }catch(err){
+    console.log('Error postingt team to tournaments:', err);
+    throw err;
+  }
+}

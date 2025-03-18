@@ -6,7 +6,7 @@ import GroupStage from '../components/groupStage';
 import KnockoutStage from '../components/knockoutStage';
 import DivideGroups from '../components/divideGroup';
 import LoadingScreen from "./loadingScreen";
-
+import {getGroups} from '../api/groupAPI';
 const ManageTournament = () => {
     const [activeTab, setActiveTab] = useState('tin-chung');
     const [loading, setLoading] = useState(false);
@@ -69,7 +69,9 @@ const ManageTournament = () => {
         },
     ];
 
-    
+    const fetchGroup = () =>{
+        
+    }
 
     // Kiểm tra nếu không có dữ liệu giải đấu
     if (!tournament) {
@@ -99,7 +101,7 @@ const ManageTournament = () => {
                     >
                         Tin Chung
                     </button>
-                    {tournament.format === "Bảng đấu" && (
+                    {tournament.format ==="Group Stage" && (
                         <>
                             <button
                                 className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'vong-bang' ? 'bg-teal-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
@@ -115,7 +117,7 @@ const ManageTournament = () => {
                             </button>
                         </>
                     )}
-                    {tournament.format !== 'Bảng đấu' && (
+                    {tournament.format === "Round Robin" && (
                         <button
                             className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'lich-thi-dau' ? 'bg-green-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
                             onClick={() => setActiveTab('lich-thi-dau')}

@@ -1,28 +1,16 @@
 import React from "react";
+import { useState, useEffect } from "react";
+import {getMatchesByTournamentId} from '../api/matchAPI';
+
 
 const GeneralNews = ({ tournament }) => {
+    const[loading, setLoading] = useState(false);
     return (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Lịch thi đấu và thông tin */}
             <div className="md:col-span-1 space-y-6">
                 {/* Lịch thi đấu */}
-                <div className="bg-gray-800 p-5 rounded-2xl shadow-xl">
-                    <h3 className="text-xl font-bold text-white mb-4">🗓️ Lịch thi đấu</h3>
-                    <div className="space-y-3">
-                        {[1, 2, 3].map((_, index) => (
-                            <div
-                                key={index}
-                                className="p-4 rounded-xl bg-gray-700 hover:bg-gray-600 transition-all duration-200 border border-gray-600"
-                            >
-                                <p className="text-white font-medium">Đội #{index * 2 + 1} vs Đội #{index * 2 + 2}</p>
-                                <p className="text-sm text-gray-400">10:00 - 12:00</p>
-                            </div>
-                        ))}
-                    </div>
-                    <button className="mt-4 w-full text-blue-400 hover:text-blue-300 text-sm font-semibold transition-colors">
-                        ➕ Xem toàn bộ lịch
-                    </button>
-                </div>
+                
 
                 {/* Thông tin chung */}
                 <div className="bg-gray-800 p-5 rounded-2xl shadow-xl">
