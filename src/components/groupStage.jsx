@@ -27,21 +27,25 @@ const GroupStage = ({ tournament }) => {
         setLoading(true);
         try {
             const res = await getMatchesByTournamentId(tournament._id);
-            // Sort matches initially by date and time
-            const sortedMatches = res.sort((a, b) => {
+            
+            // Lọc các trận đấu có type là "Group Stage"
+            const groupStageMatches = res.filter(match => match.type === "Group Stage");
+            
+            // Sắp xếp các trận đấu theo ngày và giờ
+            const sortedMatches = groupStageMatches.sort((a, b) => {
                 const dateA = new Date(a.matchDate + 'T' + a.matchTime);
                 const dateB = new Date(b.matchDate + 'T' + b.matchTime);
                 return dateA - dateB;
             });
+            
             setMatches(sortedMatches);
-            console.log('Match data', sortedMatches);
+            console.log('Group Stage Match data', sortedMatches);
         } catch (error) {
             console.error('Error fetching matches:', error);
         } finally {
             setLoading(false);
         }
     };
-
     useEffect(() => {
         fetchMatches();
         const user = localStorage.getItem('user');
@@ -102,6 +106,7 @@ const GroupStage = ({ tournament }) => {
                 matchDate: `${editForm.date}T00:00:00Z`,
                 matchTime: matchTimeUTC.toISOString(),
                 status: 'Finished',
+                type: 'Group Stage',
             };
             console.log('Payload sent to updateMatch:', updatedMatch);
             await updateMatch(matchId, updatedMatch);

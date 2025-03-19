@@ -1,126 +1,425 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import {
+  getMatchesByTournamentId,
+  createMatches,
+  updateMatch,
+} from "../api/matchAPI";
 
-const KnockoutStage = ({ tournament }) => {
-  if (!tournament.teamsToAdvance) {
-    return <p className="text-center text-red-500">Giải đấu này không có vòng đấu loại trực tiếp.</p>;
-  }
+const KnockoutStage = ({ tournament, teams }) => {
+  console.log("tournament: ", tournament);
+  console.log("teams: ", teams);
 
-  const numberOfTeamsInKnockout = tournament.teamsToAdvance;
-  const roundNames = {
-    16: "Vòng 1/8",
-    8: "Tứ kết",
-    4: "Bán kết",
-    2: "Chung kết",
+  const [rounds, setRounds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [editingMatchId, setEditingMatchId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    team1: "",
+    team2: "",
+    scoreTeam1: "",
+    scoreTeam2: "",
+    matchVenue: "",
+    matchDate: "",
+    matchTime: "",
+    status: "Scheduled",
+  });
+
+  const initializePlaceholderRounds = (teamCount) => {
+    const roundConfig = {
+      16: [8, 4, 2, 1], // Vòng 1/8 (8 trận), Tứ kết (4), Bán kết (2), Chung kết (1)
+      8: [4, 2, 1],     // Tứ kết (4), Bán kết (2), Chung kết (1)
+      4: [2, 1],        // Bán kết (2), Chung kết (1)
+      2: [1],           // Chung kết (1)
+    }[teamCount] || [1];
+
+    const roundNames = ["Vòng 1/16", "Vòng 1/8", "Tứ kết", "Bán kết", "Chung kết"];
+    const startIndex = {
+      16: 1, // Bắt đầu từ Vòng 1/8
+      8: 2,  // Bắt đầu từ Tứ kết
+      4: 3,  // Bắt đầu từ Bán kết
+      2: 4,  // Bắt đầu từ Chung kết
+    }[teamCount] || 4; // Chung kết là mặc định nếu teamCount không khớp
+
+    return roundConfig.map((matchCount, index) => ({
+      name: roundNames[startIndex + index],
+      roundNumber: index + 1,
+      matches: Array.from({ length: matchCount }, (_, i) => ({
+        _id: `placeholder-${index + 1}-${i}`,
+        team1: null,
+        team2: null,
+        scoreTeam1: null,
+        scoreTeam2: null,
+        matchDate: null,
+        matchTime: null,
+        matchVenue: "Chưa xác định",
+        round: index + 1,
+        tournament: tournament._id,
+        status: "Scheduled",
+        createdAt: new Date(),
+        type: "Knockout",
+      })),
+    }));
   };
 
-  if (![2, 4, 8, 16].includes(numberOfTeamsInKnockout)) {
-    return <p className="text-center text-red-500">Số đội không hợp lệ cho vòng knockout.</p>;
-  }
+  useEffect(() => {
+    const setupKnockoutStage = async () => {
+      const teamCount = tournament.number_of_team_advances || 16;
+      setRounds(initializePlaceholderRounds(teamCount));
+      setLoading(true);
 
-  const generateKnockoutMatches = (numberOfTeams) => {
-    let matches = [];
-    let teamsInCurrentRound = Array.from({ length: numberOfTeams }, (_, i) => ({
-      name: `Đội #${i + 1}`,
-      logo: "https://via.placeholder.com/30",
-    }));
-
-    let finalWinner = null;
-
-    while (teamsInCurrentRound.length > 1) {
-      let roundMatches = [];
-      let winners = [];
-      for (let i = 0; i < teamsInCurrentRound.length; i += 2) {
-        let team1 = teamsInCurrentRound[i];
-        let team2 = teamsInCurrentRound[i + 1];
-        let score1 = Math.floor(Math.random() * 5);
-        let score2 = Math.floor(Math.random() * 5);
-        let penalty1 = null;
-        let penalty2 = null;
-
-        if (score1 === score2) {
-          penalty1 = Math.floor(Math.random() * 5 + 1);
-          penalty2 = Math.floor(Math.random() * 5 + 1);
+      try {
+        const allMatches = await getMatchesByTournamentId(tournament._id);
+        const knockoutMatches = allMatches.filter(
+          (match) => match.round && match.round >= 1 && match.type === "Knockout"
+        );
+        let matches = knockoutMatches;
+        if (knockoutMatches.length < getTotalMatches(teamCount)) {
+          matches = await generateKnockoutMatches(teamCount, tournament._id);
         }
+        const updatedRounds = organizeMatchesIntoRounds(matches, teamCount);
+        setRounds(updatedRounds);
+      } catch (error) {
+        console.error("Error setting up knockout stage:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        let winner =
-          score1 > score2 || (score1 === score2 && penalty1 >= penalty2)
-            ? team1
-            : team2;
+    setupKnockoutStage();
+    const user = localStorage.getItem("user");
+    setCurrentUserId(user ? JSON.parse(user).id : null);
+  }, [tournament._id, tournament.number_of_team_advances]);
 
-        winners.push(winner);
-        roundMatches.push({
-          roundName: roundNames[teamsInCurrentRound.length] || `Vòng ${teamsInCurrentRound.length}`,
-          team1,
-          team2,
-          score1,
-          score2,
-          penalty1,
-          penalty2,
-          stadium: `Sân #${i / 2 + 1}`,
-          matchTime: `${Math.floor(Math.random() * 10) + 14}:00`,
-          winner,
+  const getTotalMatches = (teamCount) => {
+    const roundConfig = {
+      16: [8, 4, 2, 1],
+      8: [4, 2, 1],
+      4: [2, 1],
+      2: [1],
+    }[teamCount] || [1];
+    return roundConfig.reduce((sum, count) => sum + count, 0);
+  };
+
+  const generateKnockoutMatches = async (teamCount, tournamentId) => {
+    const roundConfig = {
+      16: [8, 4, 2, 1],
+      8: [4, 2, 1],
+      4: [2, 1],
+      2: [1],
+    }[teamCount] || [1];
+
+    const matches = [];
+    roundConfig.forEach((matchCount, roundIndex) => {
+      const roundNumber = roundIndex + 1;
+      for (let i = 0; i < matchCount; i++) {
+        matches.push({
+          tournament: tournamentId,
+          round: roundNumber,
+          matchVenue: "Chưa xác định",
+          status: "Scheduled",
+          team1: null,
+          team2: null,
+          scoreTeam1: null,
+          scoreTeam2: null,
+          matchDate: null,
+          matchTime: null,
+          type: "Knockout",
         });
       }
-      matches.push(roundMatches);
-      teamsInCurrentRound = winners;
-      if (teamsInCurrentRound.length === 1) {
-        finalWinner = teamsInCurrentRound[0];
-      }
+    });
+
+    try {
+      const createdMatches = await createMatches(matches);
+      return createdMatches;
+    } catch (error) {
+      console.error("Failed to create matches via API:", error);
+      return matches;
     }
-    return { matches, finalWinner };
   };
 
-  const { matches: knockoutMatches, finalWinner } = generateKnockoutMatches(numberOfTeamsInKnockout);
+  const organizeMatchesIntoRounds = (matches, teamCount) => {
+    const roundConfig = {
+      16: [8, 4, 2, 1],
+      8: [4, 2, 1],
+      4: [2, 1],
+      2: [1],
+    }[teamCount] || [1];
+
+    const roundNames = ["Vòng 1/16", "Vòng 1/8", "Tứ kết", "Bán kết", "Chung kết"];
+    const startIndex = {
+      16: 1, // Vòng 1/8
+      8: 2,  // Tứ kết
+      4: 3,  // Bán kết
+      2: 4,  // Chung kết
+    }[teamCount] || 4;
+
+    return roundConfig.map((matchCount, index) => {
+      const roundNumber = index + 1;
+      const roundMatches = matches.filter((match) => match.round === roundNumber);
+      return {
+        name: roundNames[startIndex + index],
+        roundNumber,
+        matches: roundMatches.slice(0, matchCount),
+      };
+    });
+  };
+
+  const isAdmin = currentUserId && currentUserId === tournament.createdBy?.toString();
+
+  const handleEditClick = (match) => {
+    setEditingMatchId(match._id);
+    setEditForm({
+      team1: match.team1?._id || match.team1 || "",
+      team2: match.team2?._id || match.team2 || "",
+      scoreTeam1: match.scoreTeam1 || "",
+      scoreTeam2: match.scoreTeam2 || "",
+      matchVenue: match.matchVenue || "Chưa xác định",
+      matchDate: match.matchDate ? new Date(match.matchDate).toISOString().split("T")[0] : "",
+      matchTime: match.matchTime ? new Date(match.matchTime).toISOString().substr(11, 5) : "",
+      status: match.status || "Scheduled",
+    });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const updatedMatch = {
+        team1: editForm.team1 || null,
+        team2: editForm.team2 || null,
+        scoreTeam1: editForm.scoreTeam1 ? parseInt(editForm.scoreTeam1) : null,
+        scoreTeam2: editForm.scoreTeam2 ? parseInt(editForm.scoreTeam2) : null,
+        matchVenue: editForm.matchVenue || "Chưa xác định",
+        matchDate: editForm.matchDate ? `${editForm.matchDate}T00:00:00Z` : null,
+        matchTime: editForm.matchTime
+          ? new Date(`1970-01-01T${editForm.matchTime}:00Z`).toISOString()
+          : null,
+        status: editForm.status,
+      };
+      console.log("editMatchId: ", editingMatchId);
+      console.log("UpdateMatching id: ", updatedMatch);
+      await updateMatch(editingMatchId, updatedMatch);
+      const refreshedMatches = await getMatchesByTournamentId(tournament._id);
+      setRounds(
+        organizeMatchesIntoRounds(
+          refreshedMatches.filter((m) => m.round >= 1),
+          tournament.number_of_team_advances || 16
+        )
+      );
+      setEditingMatchId(null);
+    } catch (error) {
+      console.error("Error saving match:", error);
+      alert("Không thể lưu trận đấu. Vui lòng thử lại.");
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "Chưa xác định";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const getTeamName = (teamIdOrObject) => {
+    if (!teamIdOrObject) return "TBD";
+    if (typeof teamIdOrObject === "string") {
+      const team = teams.find((t) => t._id === teamIdOrObject);
+      return team ? team.name : "TBD";
+    }
+    if (typeof teamIdOrObject === "object" && teamIdOrObject.name) {
+      return teamIdOrObject.name;
+    }
+    return "TBD";
+  };
+
+  const availableTeamsForTeam1 = teams.filter(
+    (team) => !editForm.team2 || team._id !== editForm.team2
+  );
+
+  const availableTeamsForTeam2 = teams.filter(
+    (team) => !editForm.team1 || team._id !== editForm.team1
+  );
 
   return (
-    <div className="p-6 bg-gray-900 rounded-lg shadow-xl text-white overflow-x-auto">
-      <h2 className="text-3xl font-bold mb-6 text-center text-yellow-400">
-        Vòng Knockout - {tournament.name}
-      </h2>
-      <div className="flex justify-center items-start space-x-10 relative">
-        {knockoutMatches.map((round, index) => (
-          <div key={index} className="flex flex-col items-center relative">
-            <h3 className="text-lg font-semibold text-yellow-300 mb-4">{round[0]?.roundName}</h3>
-            {round.map((match, matchIndex) => (
-              <div
-                key={matchIndex}
-                className="relative flex flex-col bg-green-300 border border-green-500 p-2 rounded-lg shadow-md w-80 mb-4"
-              >
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-2">
-                    <img src={match.team1.logo} alt="Logo" className="w-8 h-8" />
-                    <span className="text-black font-medium">{match.team1.name}</span>
+    <div className="min-h-screen bg-gray-900 p-6">
+      <h1 className="text-3xl font-bold text-white text-center mb-8">Knockout Stage</h1>
+      {loading && <div className="text-center text-white mb-4">Đang tải dữ liệu...</div>}
+      <div className="flex overflow-x-auto space-x-6 max-w-6xl mx-auto">
+        {rounds.map((round) => (
+          <div key={round.roundNumber} className="flex-shrink-0 w-72">
+            <h2 className="text-xl font-semibold text-white mb-4 text-center border-b-2 border-blue-500 pb-2">
+              {round.name}
+            </h2>
+            <div className="space-y-6">
+              {round.matches.map((match) => (
+                <div
+                  key={match._id}
+                  className="bg-gray-800 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-white truncate w-1/3">{getTeamName(match.team1)}</span>
+                    <span className="text-blue-400 font-bold">
+                      {match.scoreTeam1 !== null ? match.scoreTeam1 : "-"}
+                    </span>
+                    <span className="text-gray-400">vs</span>
+                    <span className="text-blue-400 font-bold">
+                      {match.scoreTeam2 !== null ? match.scoreTeam2 : "-"}
+                    </span>
+                    <span className="text-white truncate w-1/3">{getTeamName(match.team2)}</span>
                   </div>
-                  <div className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold">
-                    {match.score1} - {match.score2}
+                  <div className="text-center text-gray-400 text-sm mt-2">
+                    <p>Sân: {match.matchVenue}</p>
+                    <p>
+                      {formatDate(match.matchDate)} -{" "}
+                      {match.matchTime
+                        ? new Date(match.matchTime).toLocaleTimeString("vi-VN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "Chưa xác định"}
+                    </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-black font-medium">{match.team2.name}</span>
-                    <img src={match.team2.logo} alt="Logo" className="w-8 h-8" />
-                  </div>
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleEditClick(match)}
+                      className="mt-3 w-full bg-blue-600 text-white py-1 rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Chỉnh sửa
+                    </button>
+                  )}
                 </div>
-                <div className="text-center text-black font-semibold mt-2">
-                  🏟 {match.stadium} - ⏰ {match.matchTime}
-                </div>
-                {match.penalty1 !== null && (
-                  <div className="text-center text-red-600 font-bold mt-1">
-                    Pen: {match.penalty1} - {match.penalty2}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        ))}
-        {finalWinner && (
-          <div className="flex flex-col items-center relative">
-            <h3 className="text-2xl font-bold text-yellow-400 mt-8">🏆 Nhà vô địch</h3>
-            <div className="flex flex-col items-center bg-yellow-500 border border-yellow-600 p-4 rounded-xl shadow-lg mt-4 w-80">
-              <img src={finalWinner.logo} alt="Logo" className="w-16 h-16 mb-2" />
-              <span className="text-black font-bold text-lg">{finalWinner.name}</span>
+              ))}
             </div>
           </div>
-        )}
+        ))}
       </div>
+
+      {editingMatchId && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all duration-300 scale-100 hover:scale-105">
+            <h3 className="text-2xl font-bold text-white text-center mb-6 border-b border-gray-700 pb-2">
+              Chỉnh sửa trận đấu
+            </h3>
+            <div className="space-y-5">
+              <div>
+                <label className="text-sm font-medium text-gray-300">Đội 1</label>
+                <select
+                  name="team1"
+                  value={editForm.team1}
+                  onChange={handleEditChange}
+                  className="w-full mt-1 p-2 bg-gray-700 text-white rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="">Chọn đội</option>
+                  {availableTeamsForTeam1.map((team) => (
+                    <option key={team._id} value={team._id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Đội 2</label>
+                <select
+                  name="team2"
+                  value={editForm.team2}
+                  onChange={handleEditChange}
+                  className="w-full mt-1 p-2 bg-gray-700 text-white rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="">Chọn đội</option>
+                  {availableTeamsForTeam2.map((team) => (
+                    <option key={team._id} value={team._id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Tỷ số</label>
+                <div className="flex space-x-3 mt-1">
+                  <input
+                    name="scoreTeam1"
+                    type="number"
+                    value={editForm.scoreTeam1}
+                    onChange={handleEditChange}
+                    className="w-1/2 p-2 bg-gray-700 text-white rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    placeholder="0"
+                  />
+                  <input
+                    name="scoreTeam2"
+                    type="number"
+                    value={editForm.scoreTeam2}
+                    onChange={handleEditChange}
+                    className="w-1/2 p-2 bg-gray-700 text-white rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Địa điểm</label>
+                <input
+                  name="matchVenue"
+                  value={editForm.matchVenue}
+                  onChange={handleEditChange}
+                  className="w-full mt-1 p-2 bg-gray-700 text-white rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Chưa xác định"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Ngày (dd/mm/yyyy)</label>
+                <input
+                  name="matchDate"
+                  type="date"
+                  value={editForm.matchDate}
+                  onChange={handleEditChange}
+                  className="w-full mt-1 p-2 bg-gray-700 text-white rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Giờ</label>
+                <input
+                  name="matchTime"
+                  type="time"
+                  value={editForm.matchTime}
+                  onChange={handleEditChange}
+                  className="w-full mt-1 p-2 bg-gray-700 text-white rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Trạng thái</label>
+                <select
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditChange}
+                  className="w-full mt-1 p-2 bg-gray-700 text-white rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="Scheduled">Scheduled</option>
+                  <option value="Finished">Finished</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-4 mt-8">
+              <button
+                onClick={() => setEditingMatchId(null)}
+                className="bg-red-600 text-white py-2 px-5 rounded-lg hover:bg-red-700 transition-colors duration-200"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="bg-green-600 text-white py-2 px-5 rounded-lg hover:bg-green-700 transition-colors duration-200"
+              >
+                Lưu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

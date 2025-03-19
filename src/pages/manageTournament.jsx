@@ -147,10 +147,10 @@ const ManageTournament = () => {
                         <GroupStage tournament={tournament} />
                     )}
                     {activeTab === 'vong-loai-truc-tiep' && (
-                        <KnockoutStage tournament={tournament} fakeTeamsData={fakeTeamsData} />
+                        <KnockoutStage tournament={tournament} teams={tournament.teams} />
                     )}
                     {activeTab === 'bang-xep-hang' && (
-                        <Ranking tournament={tournament} groups={tournament.groups}/>
+                        <Ranking tournament={tournament}/>
                     )}
                 </div>
             </div>

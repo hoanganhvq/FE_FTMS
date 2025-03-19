@@ -14,7 +14,7 @@ export const getMatches = async () => {
 
 export const updateMatch = async(id, matchData) =>{
     try{
-        const response = await axios.put(`${API_URL}/${id}`, matchData);
+        const response = await axios.put(`${API_URL}/update-match-round/${id}`, matchData);
         return response.data;
     } catch(error){
         console.error('Error updating match:', error);
@@ -34,3 +34,13 @@ export const getMatchesByTournamentId = async(id) => {
         
     }
 }
+
+export const createMatches =async (matches) =>{
+    try{
+        const res = await axios.post(`${API_URL}/generate-match-round`, {matches});
+        return res.data
+    }catch(error){
+        console.error('Error creating match:', error);
+    }
+}
+
