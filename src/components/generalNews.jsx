@@ -3,7 +3,7 @@ import { getMatchesByTournamentId, caculateData, getWinnerAndRunner, getThirdPla
 import LoadingScreen from '../pages/loadingScreen';
 import { updateTournament } from "../api/tounamentAPI";
 
-const GeneralNews = ({ tournament, }) => {
+const GeneralNews = ({ tournament }) => {
     const [loading, setLoading] = useState(false);
     const [tournamentStatus, setTournamentStatus] = useState(tournament.status); // Track tournament status locally
     const initialState = {
@@ -66,11 +66,9 @@ const GeneralNews = ({ tournament, }) => {
             teamCount
         };
     };
-
-    // Function to end the tournament
-    const handleEndTournament = async () => {
+    const fetchDataEndTournament = async()=>{
         setLoading(true);
-        try {
+        try{
             const [_, finalAndThirdMatch] = await Promise.all([
                 fetchData(),
                 calculateFinalAndThirdMatch(),
@@ -81,21 +79,30 @@ const GeneralNews = ({ tournament, }) => {
                 getWinnerAndRunner(tournament._id, finalAndThirdMatch.roundNumberFinal),
                 getThirdPlace(tournament._id, finalAndThirdMatch.roundNumberThird),
             ]);
-            console.log("Data winner and runner: ", winnerAndRunner);
-            console.log("Data winner: ", winnerAndRunner.winner);
-            console.log("Data runner: ", winnerAndRunner.runnerUp);
-            console.log("Data third: ", thirdPlace);
+         
             setChampion(winnerAndRunner.winner);
             setRunnerUp(winnerAndRunner.runnerUp);
             setThirdPlace(thirdPlace);
-            console.log("Data champion: ", champion1);
-            console.log("Data Runner: ", runnerUp2);
-            console.log("Data Third: ", thirdPlace3);
+ 
             if (!winnerAndRunner ) {
                 alert("Cannot end tournament: Champion, Runner-Up, or Third Place is not determined yet.");
                 return; // Dừng hàm nếu không đủ dữ liệu
             }
-    
+            return true;
+        } catch (error) {
+            console.error("Error ending tournament:", error);
+            alert("Failed to end the tournament: " + error.message);
+            throw error; // Re-throw for any additional error handling
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    // Function to end the tournament
+    const handleEndTournament = async () => {
+        setLoading(true);
+        try {
+           await  fetchDataEndTournament();
             const updateStatusData = {
                 ...tournament,
                 status: 'Ended',
@@ -119,6 +126,9 @@ const GeneralNews = ({ tournament, }) => {
         fetchData();
         const user = localStorage.getItem('user');
         setCurrentUserId(user ? JSON.parse(user).id : null);
+        if(tournament.status === "Ended"){
+            fetchDataEndTournament();
+        }
     }, [tournament._id]);
 
     if (!state || loading) {
@@ -229,21 +239,21 @@ const GeneralNews = ({ tournament, }) => {
                             {[
                                 {
                                     label: "Champion ",
-                                    value: champion1.name,
+                                    value: champion1?.name || "TBD",
                                     color: "from-yellow-400 to-yellow-600",
                                     medal: "🥇",
                                     shadow: "shadow-yellow-500/50",
                                 },
                                 {
                                     label: "Runner-Up",
-                                    value: runnerUp2.name,
+                                    value: champion1?.name || "TBD",
                                     color: "from-gray-300 to-gray-500",
                                     medal: "🥈",
                                     shadow: "shadow-gray-500/50", 
                                 },
                                 {
                                     label: "Third Place",
-                                    value: thirdPlace3.name,
+                                    value: thirdPlace3?.name || "TBD",
                                     color: "from-orange-400 to-orange-600",
                                     medal: "🥉",
                                     shadow: "shadow-orange-500/50",

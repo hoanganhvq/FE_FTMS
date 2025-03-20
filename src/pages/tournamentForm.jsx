@@ -70,12 +70,11 @@ const NewTournamentForm = () => {
     }
   };
 
-  // Xử lý thay đổi ngày từ input type="date"
   const handleDateChange = (e) => {
     const { value } = e.target;
     setTournamentData({
       ...tournamentData,
-      time_start: value, // Giá trị đã là yyyy-mm-dd từ input type="date"
+      time_start: value,
     });
   };
 
@@ -83,8 +82,8 @@ const NewTournamentForm = () => {
   const isRoundRobin = tournamentData.format === 'Round Robin';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 pt-24 pb-12 px-4 flex items-start justify-center relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-teal-500/10 via-transparent to-transparent animate-pulse-slow"></div>
+    <div className="min-h-screen bg-gray-900 pt-24 pb-12 px-4 flex items-start justify-center relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent animate-pulse-slow"></div>
       <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none"></div>
 
       {showSuccess && (
@@ -96,8 +95,8 @@ const NewTournamentForm = () => {
         </div>
       )}
 
-      <div className="w-full max-w-3xl bg-gray-800/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 mt-6 transform transition-all hover:shadow-[0_0_40px_rgba(20,184,166,0.2)] border border-gray-700/30 animate-fade-in-up">
-        <h2 className="text-5xl font-bold text-center bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent mb-12 flex items-center justify-center gap-4">
+      <div className="w-full max-w-3xl bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl p-8 mt-6 transform transition-all hover:shadow-[0_0_40px_rgba(59,130,246,0.2)] border border-gray-700/50">
+        <h2 className="text-5xl font-bold text-center bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-12 flex items-center justify-center gap-4">
           <span className="text-6xl animate-bounce">🏆</span>
           Create Your Tournament
         </h2>
@@ -105,7 +104,7 @@ const NewTournamentForm = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Tournament Logo */}
           <div className="relative group">
-            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-teal-300 transition-colors duration-200">
+            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-blue-400 transition-colors duration-200">
               Tournament Logo (Preview Only)
             </label>
             <div className="flex items-center gap-4">
@@ -113,13 +112,13 @@ const NewTournamentForm = () => {
                 type="file"
                 accept="image/*"
                 onChange={handleLogoChange}
-                className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-500 file:text-white hover:file:bg-teal-600"
+                className="w-full px-5 py-3 bg-gray-700/70 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-700/90 shadow-sm hover:shadow-blue-500/20 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600"
               />
               {logoPreview && (
                 <img
                   src={logoPreview}
                   alt="Tournament Logo Preview"
-                  className="w-16 h-16 object-cover rounded-full border-2 border-teal-500 shadow-md"
+                  className="w-16 h-16 object-cover rounded-full border-2 border-blue-500 shadow-md"
                 />
               )}
             </div>
@@ -127,7 +126,7 @@ const NewTournamentForm = () => {
 
           {/* Tournament Name */}
           <div className="relative group">
-            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-teal-300 transition-colors duration-200">
+            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-blue-400 transition-colors duration-200">
               Tournament Name
             </label>
             <input
@@ -136,29 +135,29 @@ const NewTournamentForm = () => {
               value={tournamentData.name}
               onChange={handleChange}
               required
-              className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 placeholder-gray-500 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20"
+              className="w-full px-5 py-3 bg-gray-700/70 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 placeholder-gray-500 text-white hover:bg-gray-700/90 shadow-sm hover:shadow-blue-500/20"
               placeholder="Enter tournament name"
             />
           </div>
 
-          {/* Start Date với input type="date" */}
+          {/* Start Date */}
           <div className="relative group">
-            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-teal-300 transition-colors duration-200">
+            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-blue-400 transition-colors duration-200">
               Start Date
             </label>
             <input
               type="date"
-              name="time_start" // Đổi lại name thành "time_start" để đồng bộ với state
+              name="time_start"
               value={tournamentData.time_start}
               onChange={handleDateChange}
-              className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 placeholder-gray-500 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20"
+              className="w-full px-5 py-3 bg-gray-700/70 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 placeholder-gray-500 text-white hover:bg-gray-700/90 shadow-sm hover:shadow-blue-500/20"
               required
             />
           </div>
 
           {/* Location */}
           <div className="relative group">
-            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-teal-300 transition-colors duration-200">
+            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-blue-400 transition-colors duration-200">
               Location
             </label>
             <input
@@ -167,14 +166,14 @@ const NewTournamentForm = () => {
               value={tournamentData.location}
               onChange={handleChange}
               required
-              className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 placeholder-gray-500 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20"
+              className="w-full px-5 py-3 bg-gray-700/70 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 placeholder-gray-500 text-white hover:bg-gray-700/90 shadow-sm hover:shadow-blue-500/20"
               placeholder="Enter location"
             />
           </div>
 
           {/* Description */}
           <div className="relative group">
-            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-teal-300 transition-colors duration-200">
+            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-blue-400 transition-colors duration-200">
               Description
             </label>
             <textarea
@@ -182,14 +181,14 @@ const NewTournamentForm = () => {
               value={tournamentData.description}
               onChange={handleChange}
               required
-              className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 placeholder-gray-500 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20 min-h-[140px] resize-y"
+              className="w-full px-5 py-3 bg-gray-700/70 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 placeholder-gray-500 text-white hover:bg-gray-700/90 shadow-sm hover:shadow-blue-500/20 min-h-[140px] resize-y"
               placeholder="Describe your tournament"
             />
           </div>
 
           {/* Format */}
           <div className="relative group">
-            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-teal-300 transition-colors duration-200">
+            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-blue-400 transition-colors duration-200">
               Format
             </label>
             <div className="relative">
@@ -198,18 +197,18 @@ const NewTournamentForm = () => {
                 value={tournamentData.format}
                 onChange={handleChange}
                 required
-                className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20 appearance-none"
+                className="w-full px-5 py-3 bg-gray-700/70 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-700/90 shadow-sm hover:shadow-blue-500/20 appearance-none"
               >
                 <option value="Round Robin">Round Robin</option>
                 <option value="Group Stage">Group Stage</option>
               </select>
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-teal-300 pointer-events-none">▼</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-400 pointer-events-none">▼</span>
             </div>
           </div>
 
           {/* Number of Members */}
           <div className="relative group">
-            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-teal-300 transition-colors duration-200">
+            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-blue-400 transition-colors duration-200">
               Members per Team
             </label>
             <input
@@ -219,7 +218,7 @@ const NewTournamentForm = () => {
               onChange={handleChange}
               min="1"
               required
-              className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20"
+              className="w-full px-5 py-3 bg-gray-700/70 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-700/90 shadow-sm hover:shadow-blue-500/20"
             />
           </div>
 
@@ -227,7 +226,7 @@ const NewTournamentForm = () => {
           {isGroupStage && (
             <>
               <div className="relative group">
-                <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-teal-300 transition-colors duration-200">
+                <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-blue-400 transition-colors duration-200">
                   Teams Advancing
                 </label>
                 <div className="relative">
@@ -236,19 +235,19 @@ const NewTournamentForm = () => {
                     value={tournamentData.number_of_team_advances}
                     onChange={handleChange}
                     required={isGroupStage}
-                    className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20 appearance-none"
+                    className="w-full px-5 py-3 bg-gray-700/70 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-700/90 shadow-sm hover:shadow-blue-500/20 appearance-none"
                   >
                     <option value="2">2</option>
                     <option value="4">4</option>
                     <option value="8">8</option>
                     <option value="16">16</option>
                   </select>
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-teal-300 pointer-events-none">▼</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-400 pointer-events-none">▼</span>
                 </div>
               </div>
 
               <div className="relative group">
-                <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-teal-300 transition-colors duration-200">
+                <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-blue-400 transition-colors duration-200">
                   Number of Groups
                 </label>
                 <input
@@ -258,7 +257,7 @@ const NewTournamentForm = () => {
                   onChange={handleChange}
                   min="1"
                   required={isGroupStage}
-                  className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20"
+                  className="w-full px-5 py-3 bg-gray-700/70 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-700/90 shadow-sm hover:shadow-blue-500/20"
                 />
               </div>
             </>
@@ -266,7 +265,7 @@ const NewTournamentForm = () => {
 
           {/* Number of Teams */}
           <div className="relative group">
-            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-teal-300 transition-colors duration-200">
+            <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-blue-400 transition-colors duration-200">
               Number of Teams
             </label>
             <input
@@ -276,7 +275,7 @@ const NewTournamentForm = () => {
               onChange={handleChange}
               min="1"
               required
-              className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20"
+              className="w-full px-5 py-3 bg-gray-700/70 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-700/90 shadow-sm hover:shadow-blue-500/20"
             />
           </div>
 
@@ -284,8 +283,8 @@ const NewTournamentForm = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full bg-gradient-to-r from-teal-500 to-blue-600 text-white py-4 px-6 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-300 shadow-lg transform hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg ${
-              isSubmitting ? 'animate-pulse' : 'hover:from-teal-600 hover:to-blue-700'
+            className={`w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-300 shadow-lg transform hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg ${
+              isSubmitting ? 'animate-pulse' : 'hover:from-blue-600 hover:to-purple-700'
             }`}
           >
             {isSubmitting ? (

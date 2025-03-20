@@ -146,9 +146,15 @@ const GroupStage = ({ tournament }) => {
     if (loading) {
         return <LoadingScreen message="Loading matches..." />;
     }
-
+    
     const groupedMatches = groupMatches();
-
+    if(Object.keys(groupedMatches).length === 0) {
+        return (
+            <div className="text-center text-xl font-bold text-white">
+                No matches found for this tournament.
+            </div>
+        );
+    }
     return (
         <div className="p-6 bg-gradient-to-b from-gray-900 to-black min-h-screen">
             <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-10 text-center tracking-wide">
