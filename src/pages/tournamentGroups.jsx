@@ -38,7 +38,7 @@ const TournamentDetails = () => {
         try {
             const res = await getTournaments();
             setTournaments(res);
-            console.log('tournament: ', tournaments);
+            console.log('Public tournamenet: ', res);
         } catch (err) {
             if (err.response && err.response.status === 404) {
                 setError('Not found tournament !');
@@ -60,7 +60,7 @@ const TournamentDetails = () => {
     
                 const tournamentsToUpdate = tournaments.filter(t => {
                     const startTime = new Date(t.time_start).getTime();
-                    return startTime <= now && t.status !== 'Ongoing';
+                    return startTime <= now && t.status !== 'Ongoing' && t.status !=="Ended";
                 });
     
                 console.log('Tournaments to update:', tournamentsToUpdate);
@@ -85,7 +85,6 @@ const TournamentDetails = () => {
     }, [tournaments]);
     
     
-    
 
 
 
@@ -93,7 +92,7 @@ const TournamentDetails = () => {
         if (tournament.status === 'Upcoming') {
             navigate(`/tournament/${tournament._id}`);
         } else {
-            navigate(`/manage-tournaments/${tournament._id}`, { state: { tournament } });
+            navigate(`/manage-tournaments/${tournament._id}`, { state: { tournament } }); //Public 
         }
     };
     

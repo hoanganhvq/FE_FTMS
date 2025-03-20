@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getMatchesByTournamentId, updateMatch } from '../api/matchAPI';
+import { getMatchesByTournamentId, updateMatch, updateMatchGroup } from '../api/matchAPI';
 import LoadingScreen from '../pages/loadingScreen';
 import { updateGroup } from '../api/groupAPI';
 
@@ -7,11 +7,10 @@ const GroupStage = ({ tournament }) => {
     const [loading, setLoading] = useState(false);
     const [matches, setMatches] = useState([]);
     const [editingMatchId, setEditingMatchId] = useState(null);
+    const [editingCluster, setEditingCluster] = useState(null); // 'stats' or 'schedule'
     const [editForm, setEditForm] = useState({
         scoreTeam1: '',
         scoreTeam2: '',
-        penaltyTeam1: '',
-        penaltyTeam2: '',
         yellowCardsTeam1: '',
         yellowCardsTeam2: '',
         redCardsTeam1: '',
@@ -22,22 +21,16 @@ const GroupStage = ({ tournament }) => {
     });
     const [currentUserId, setCurrentUserId] = useState(null);
 
-    // Fetch matches from the server
     const fetchMatches = async () => {
         setLoading(true);
         try {
             const res = await getMatchesByTournamentId(tournament._id);
-            
-            // Lọc các trận đấu có type là "Group Stage"
             const groupStageMatches = res.filter(match => match.type === "Group Stage");
-            
-            // Sắp xếp các trận đấu theo ngày và giờ
             const sortedMatches = groupStageMatches.sort((a, b) => {
                 const dateA = new Date(a.matchDate + 'T' + a.matchTime);
                 const dateB = new Date(b.matchDate + 'T' + b.matchTime);
                 return dateA - dateB;
             });
-            
             setMatches(sortedMatches);
             console.log('Group Stage Match data', sortedMatches);
         } catch (error) {
@@ -46,6 +39,7 @@ const GroupStage = ({ tournament }) => {
             setLoading(false);
         }
     };
+
     useEffect(() => {
         fetchMatches();
         const user = localStorage.getItem('user');
@@ -54,11 +48,10 @@ const GroupStage = ({ tournament }) => {
 
     const isTournamentCreator = currentUserId && tournament.createdBy?.toString() === currentUserId.toString();
 
-    // Group matches by group name while preserving sorted order
     const groupMatches = () => {
         const grouped = {};
         matches.forEach(match => {
-            const groupName = match.group?.name || 'Không xác định';
+            const groupName = match.group?.name || 'Undefined';
             if (!grouped[groupName]) {
                 grouped[groupName] = [];
             }
@@ -67,16 +60,15 @@ const GroupStage = ({ tournament }) => {
         return grouped;
     };
 
-    const handleEdit = (match) => {
+    const handleEdit = (match, cluster) => {
         setEditingMatchId(match._id);
+        setEditingCluster(cluster);
         const matchDate = new Date(match.matchDate);
         const matchTime = new Date(match.matchTime);
-        const adjustedTime = new Date(matchTime.getTime() + 7 * 60 * 60 * 1000); // +7 giờ (UTC+7)
+        const adjustedTime = new Date(matchTime.getTime() + 7 * 60 * 60 * 1000); // +7 hours (UTC+7)
         setEditForm({
             scoreTeam1: match.scoreTeam1 || 0,
             scoreTeam2: match.scoreTeam2 || 0,
-            penaltyTeam1: match.penaltyTeam1 || 0,
-            penaltyTeam2: match.penaltyTeam2 || 0,
             yellowCardsTeam1: match.yellowCardsTeam1 || 0,
             yellowCardsTeam2: match.yellowCardsTeam2 || 0,
             redCardsTeam1: match.redCardsTeam1 || 0,
@@ -89,32 +81,43 @@ const GroupStage = ({ tournament }) => {
 
     const handleSave = async (matchId) => {
         try {
-            const [hours, minutes] = editForm.time.split(':').map(Number);
-            const matchTimeUTC = new Date(`${editForm.date}T${editForm.time}:00Z`);
-            matchTimeUTC.setUTCHours(hours - 7, minutes, 0, 0); // Chuyển về UTC
+            let updatedMatch;
+            if (editingCluster === 'stats') {
+                updatedMatch = {
+                    scoreTeam1: parseInt(editForm.scoreTeam1) || 0,
+                    scoreTeam2: parseInt(editForm.scoreTeam2) || 0,
+                    yellowCardsTeam1: parseInt(editForm.yellowCardsTeam1) || 0,
+                    yellowCardsTeam2: parseInt(editForm.yellowCardsTeam2) || 0,
+                    redCardsTeam1: parseInt(editForm.redCardsTeam1) || 0,
+                    redCardsTeam2: parseInt(editForm.redCardsTeam2) || 0,
+                    status: 'Finished',
+                    type: 'Group Stage',
+                };
+            } else if (editingCluster === 'schedule') {
+                const [hours, minutes] = editForm.time.split(':').map(Number);
+                const matchTimeUTC = new Date(`${editForm.date}T${editForm.time}:00Z`);
+                matchTimeUTC.setUTCHours(hours - 7, minutes, 0, 0); // Convert to UTC
+                updatedMatch = {
+                    matchVenue: editForm.venue,
+                    matchDate: `${editForm.date}T00:00:00Z`,
+                    matchTime: matchTimeUTC.toISOString(),
+                    type: 'Group Stage',
+                };
+            }
 
-            const updatedMatch = {
-                scoreTeam1: parseInt(editForm.scoreTeam1) || 0,
-                scoreTeam2: parseInt(editForm.scoreTeam2) || 0,
-                penaltyTeam1: parseInt(editForm.penaltyTeam1) || 0,
-                penaltyTeam2: parseInt(editForm.penaltyTeam2) || 0,
-                yellowCardsTeam1: parseInt(editForm.yellowCardsTeam1) || 0,
-                yellowCardsTeam2: parseInt(editForm.yellowCardsTeam2) || 0,
-                redCardsTeam1: parseInt(editForm.redCardsTeam1) || 0,
-                redCardsTeam2: parseInt(editForm.redCardsTeam2) || 0,
-                matchVenue: editForm.venue,
-                matchDate: `${editForm.date}T00:00:00Z`,
-                matchTime: matchTimeUTC.toISOString(),
-                status: 'Finished',
-                type: 'Group Stage',
-            };
             console.log('Payload sent to updateMatch:', updatedMatch);
-            await updateMatch(matchId, updatedMatch);
+            await updateMatchGroup(matchId, updatedMatch);
 
-            // Update matches and sort by date and time
             const updatedMatches = matches.map(m => 
                 m._id === matchId 
-                    ? { ...m, ...updatedMatch, matchDate: new Date(updatedMatch.matchDate), matchTime: new Date(updatedMatch.matchTime) } 
+                    ? { 
+                        ...m, 
+                        ...updatedMatch, 
+                        ...(editingCluster === 'schedule' && {
+                            matchDate: new Date(updatedMatch.matchDate),
+                            matchTime: new Date(updatedMatch.matchTime),
+                        })
+                    } 
                     : m
             ).sort((a, b) => {
                 const dateA = new Date(a.matchDate + 'T' + a.matchTime);
@@ -124,6 +127,7 @@ const GroupStage = ({ tournament }) => {
 
             setMatches(updatedMatches);
             setEditingMatchId(null);
+            setEditingCluster(null);
         } catch (error) {
             console.error('Error updating match:', error.response?.data || error.message);
         }
@@ -134,8 +138,13 @@ const GroupStage = ({ tournament }) => {
         setEditForm(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleCancel = () => {
+        setEditingMatchId(null);
+        setEditingCluster(null);
+    };
+
     if (loading) {
-        return <LoadingScreen message="Đang tải trận đấu..." />;
+        return <LoadingScreen message="Loading matches..." />;
     }
 
     const groupedMatches = groupMatches();
@@ -176,181 +185,246 @@ const GroupStage = ({ tournament }) => {
 
                                     {/* Match Info */}
                                     {editingMatchId === match._id && isTournamentCreator ? (
-                                        <div className="text-center w-64 space-y-4">
-                                            <div>
-                                                <label className="text-sm text-gray-400 block mb-1">Tỉ số</label>
-                                                <div className="flex justify-center items-center gap-2">
-                                                    <input
-                                                        type="number"
-                                                        name="scoreTeam1"
-                                                        value={editForm.scoreTeam1}
-                                                        onChange={handleInputChange}
-                                                        className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
-                                                        placeholder="0"
-                                                        min="0"
-                                                    />
-                                                    <span className="text-white text-lg font-bold">-</span>
-                                                    <input
-                                                        type="number"
-                                                        name="scoreTeam2"
-                                                        value={editForm.scoreTeam2}
-                                                        onChange={handleInputChange}
-                                                        className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
-                                                        placeholder="0"
-                                                        min="0"
-                                                    />
+                                        <div className="text-center w-64 space-y-6">
+                                            {/* Cluster 1: Score, Yellow Cards, Red Cards */}
+                                            {editingCluster === 'stats' ? (
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <label className="text-sm text-gray-400 block mb-1">Score</label>
+                                                        <div className="flex justify-center items-center gap-2">
+                                                            <input
+                                                                type="number"
+                                                                name="scoreTeam1"
+                                                                value={editForm.scoreTeam1}
+                                                                onChange={handleInputChange}
+                                                                className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
+                                                                placeholder="0"
+                                                                min="0"
+                                                            />
+                                                            <span className="text-white text-lg font-bold">-</span>
+                                                            <input
+                                                                type="number"
+                                                                name="scoreTeam2"
+                                                                value={editForm.scoreTeam2}
+                                                                onChange={handleInputChange}
+                                                                className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
+                                                                placeholder="0"
+                                                                min="0"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-sm text-gray-400 block mb-1">Yellow Cards</label>
+                                                        <div className="flex justify-center items-center gap-2">
+                                                            <input
+                                                                type="number"
+                                                                name="yellowCardsTeam1"
+                                                                value={editForm.yellowCardsTeam1}
+                                                                onChange={handleInputChange}
+                                                                className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all shadow-inner"
+                                                                placeholder="0"
+                                                                min="0"
+                                                            />
+                                                            <span className="text-white text-lg font-bold">-</span>
+                                                            <input
+                                                                type="number"
+                                                                name="yellowCardsTeam2"
+                                                                value={editForm.yellowCardsTeam2}
+                                                                onChange={handleInputChange}
+                                                                className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all shadow-inner"
+                                                                placeholder="0"
+                                                                min="0"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-sm text-gray-400 block mb-1">Red Cards</label>
+                                                        <div className="flex justify-center items-center gap-2">
+                                                            <input
+                                                                type="number"
+                                                                name="redCardsTeam1"
+                                                                value={editForm.redCardsTeam1}
+                                                                onChange={handleInputChange}
+                                                                className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all shadow-inner"
+                                                                placeholder="0"
+                                                                min="0"
+                                                            />
+                                                            <span className="text-white text-lg font-bold">-</span>
+                                                            <input
+                                                                type="number"
+                                                                name="redCardsTeam2"
+                                                                value={editForm.redCardsTeam2}
+                                                                onChange={handleInputChange}
+                                                                className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all shadow-inner"
+                                                                placeholder="0"
+                                                                min="0"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-center gap-3">
+                                                        <button
+                                                            onClick={() => handleSave(match._id)}
+                                                            className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            Save
+                                                        </button>
+                                                        <button
+                                                            onClick={handleCancel}
+                                                            className="bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                            Cancel
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-sm text-gray-400 block mb-1">Penalty (nếu hòa)</label>
-                                                <div className="flex justify-center items-center gap-2">
-                                                    <input
-                                                        type="number"
-                                                        name="penaltyTeam1"
-                                                        value={editForm.penaltyTeam1}
-                                                        onChange={handleInputChange}
-                                                        className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
-                                                        placeholder="0"
-                                                        min="0"
-                                                    />
-                                                    <span className="text-white text-lg font-bold">-</span>
-                                                    <input
-                                                        type="number"
-                                                        name="penaltyTeam2"
-                                                        value={editForm.penaltyTeam2}
-                                                        onChange={handleInputChange}
-                                                        className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
-                                                        placeholder="0"
-                                                        min="0"
-                                                    />
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <span className="text-xs text-gray-500 block">Score</span>
+                                                        <span className="text-xl font-bold text-blue-300 bg-gray-800/50 px-4 py-1 rounded-full shadow-inner">
+                                                            {match.scoreTeam1 || match.scoreTeam2
+                                                                ? `${match.scoreTeam1 || 0} - ${match.scoreTeam2 || 0}`
+                                                                : 'Not available'}
+                                                        </span>
+                                                    </div>
+                                                    {isTournamentCreator && (
+                                                        <button
+                                                            onClick={() => handleEdit(match, 'stats')}
+                                                            className="mt-2 bg-blue-500 text-white px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            </svg>
+                                                            Edit Stats
+                                                        </button>
+                                                    )}
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-sm text-gray-400 block mb-1">Thẻ vàng</label>
-                                                <div className="flex justify-center items-center gap-2">
-                                                    <input
-                                                        type="number"
-                                                        name="yellowCardsTeam1"
-                                                        value={editForm.yellowCardsTeam1}
-                                                        onChange={handleInputChange}
-                                                        className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all shadow-inner"
-                                                        placeholder="0"
-                                                        min="0"
-                                                    />
-                                                    <span className="text-white text-lg font-bold">-</span>
-                                                    <input
-                                                        type="number"
-                                                        name="yellowCardsTeam2"
-                                                        value={editForm.yellowCardsTeam2}
-                                                        onChange={handleInputChange}
-                                                        className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all shadow-inner"
-                                                        placeholder="0"
-                                                        min="0"
-                                                    />
+                                            )}
+
+                                            {/* Cluster 2: Venue, Date, Time */}
+                                            {editingCluster === 'schedule' ? (
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <label className="text-sm text-gray-400 block mb-1">Venue</label>
+                                                        <input
+                                                            type="text"
+                                                            name="venue"
+                                                            value={editForm.venue}
+                                                            onChange={handleInputChange}
+                                                            className="w-full text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
+                                                            placeholder="Stadium"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-sm text-gray-400 block mb-1">Date</label>
+                                                        <input
+                                                            type="date"
+                                                            name="date"
+                                                            value={editForm.date}
+                                                            onChange={handleInputChange}
+                                                            className="w-full text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-sm text-gray-400 block mb-1">Time</label>
+                                                        <input
+                                                            type="time"
+                                                            name="time"
+                                                            value={editForm.time}
+                                                            onChange={handleInputChange}
+                                                            className="w-full text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
+                                                        />
+                                                    </div>
+                                                    <div className="flex justify-center gap-3">
+                                                        <button
+                                                            onClick={() => handleSave(match._id)}
+                                                            className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            Save
+                                                        </button>
+                                                        <button
+                                                            onClick={handleCancel}
+                                                            className="bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                            Cancel
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-sm text-gray-400 block mb-1">Thẻ đỏ</label>
-                                                <div className="flex justify-center items-center gap-2">
-                                                    <input
-                                                        type="number"
-                                                        name="redCardsTeam1"
-                                                        value={editForm.redCardsTeam1}
-                                                        onChange={handleInputChange}
-                                                        className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all shadow-inner"
-                                                        placeholder="0"
-                                                        min="0"
-                                                    />
-                                                    <span className="text-white text-lg font-bold">-</span>
-                                                    <input
-                                                        type="number"
-                                                        name="redCardsTeam2"
-                                                        value={editForm.redCardsTeam2}
-                                                        onChange={handleInputChange}
-                                                        className="w-16 text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all shadow-inner"
-                                                        placeholder="0"
-                                                        min="0"
-                                                    />
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <span className="text-xs text-gray-500 block">Venue</span>
+                                                        <span className="text-sm text-gray-300 bg-gray-700/30 px-2 py-1 rounded-md truncate w-full">
+                                                            {match.matchVenue || 'Not available'}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-xs text-gray-500 block">Time</span>
+                                                        <span className="text-sm text-gray-400 block">
+                                                            {new Date(match.matchDate).toLocaleDateString('en-GB', {
+                                                                day: '2-digit',
+                                                                month: '2-digit',
+                                                                year: 'numeric',
+                                                            })}
+                                                            {' - '}
+                                                            {new Date(match.matchTime).toLocaleTimeString('en-GB', {
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                                timeZone: 'Asia/Ho_Chi_Minh',
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                    {isTournamentCreator && (
+                                                        <button
+                                                            onClick={() => handleEdit(match, 'schedule')}
+                                                            className="mt-2 bg-blue-500 text-white px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            </svg>
+                                                            Edit Schedule
+                                                        </button>
+                                                    )}
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-sm text-gray-400 block mb-1">Địa điểm</label>
-                                                <input
-                                                    type="text"
-                                                    name="venue"
-                                                    value={editForm.venue}
-                                                    onChange={handleInputChange}
-                                                    className="w-full text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
-                                                    placeholder="Sân"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm text-gray-400 block mb-1">Ngày</label>
-                                                <input
-                                                    type="date"
-                                                    name="date"
-                                                    value={editForm.date}
-                                                    onChange={handleInputChange}
-                                                    className="w-full text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm text-gray-400 block mb-1">Giờ</label>
-                                                <input
-                                                    type="time"
-                                                    name="time"
-                                                    value={editForm.time}
-                                                    onChange={handleInputChange}
-                                                    className="w-full text-center bg-gray-700/80 text-white rounded-lg p-2 text-sm border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
-                                                />
-                                            </div>
-                                            <div className="flex justify-center gap-3">
-                                                <button
-                                                    onClick={() => handleSave(match._id)}
-                                                    className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                    Lưu
-                                                </button>
-                                                <button
-                                                    onClick={() => setEditingMatchId(null)}
-                                                    className="bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                    Hủy
-                                                </button>
-                                            </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="text-center w-64 flex flex-col items-center justify-center gap-3">
                                             <div>
-                                                <span className="text-xs text-gray-500 block">Tỉ số</span>
+                                                <span className="text-xs text-gray-500 block">Score</span>
                                                 <span className="text-xl font-bold text-blue-300 bg-gray-800/50 px-4 py-1 rounded-full shadow-inner">
                                                     {match.scoreTeam1 || match.scoreTeam2
                                                         ? `${match.scoreTeam1 || 0} - ${match.scoreTeam2 || 0}`
-                                                        : 'Chưa có'}
+                                                        : 'Not available'}
                                                 </span>
                                             </div>
                                             <div>
-                                                <span className="text-xs text-gray-500 block">Địa điểm</span>
+                                                <span className="text-xs text-gray-500 block">Venue</span>
                                                 <span className="text-sm text-gray-300 bg-gray-700/30 px-2 py-1 rounded-md truncate w-full">
-                                                    {match.matchVenue || 'Chưa có'}
+                                                    {match.matchVenue || 'Not available'}
                                                 </span>
                                             </div>
                                             <div>
-                                                <span className="text-xs text-gray-500 block">Thời gian</span>
+                                                <span className="text-xs text-gray-500 block">Time</span>
                                                 <span className="text-sm text-gray-400 block">
-                                                    {new Date(match.matchDate).toLocaleDateString('vi-VN', {
+                                                    {new Date(match.matchDate).toLocaleDateString('en-GB', {
                                                         day: '2-digit',
                                                         month: '2-digit',
                                                         year: 'numeric',
                                                     })}
                                                     {' - '}
-                                                    {new Date(match.matchTime).toLocaleTimeString('vi-VN', {
+                                                    {new Date(match.matchTime).toLocaleTimeString('en-GB', {
                                                         hour: '2-digit',
                                                         minute: '2-digit',
                                                         timeZone: 'Asia/Ho_Chi_Minh',
@@ -358,15 +432,26 @@ const GroupStage = ({ tournament }) => {
                                                 </span>
                                             </div>
                                             {isTournamentCreator && (
-                                                <button
-                                                    onClick={() => handleEdit(match)}
-                                                    className="mt-2 bg-blue-500 text-white px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                    Chỉnh sửa
-                                                </button>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleEdit(match, 'stats')}
+                                                        className="mt-2 bg-blue-500 text-white px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                        Stats
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleEdit(match, 'schedule')}
+                                                        className="mt-2 bg-blue-500 text-white px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                        Schedule
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     )}

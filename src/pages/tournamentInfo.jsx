@@ -35,7 +35,6 @@ const TournamentInformation = () => {
   const fetchUser = async () => {
     try {
       const user = await getMe();
-      console.log('User ', user);
       setMyTeam(user.team);
     } catch (error) {
       console.log('Error', error);

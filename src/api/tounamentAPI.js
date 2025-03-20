@@ -28,7 +28,7 @@ export const createTournament = async(tournamentData) =>{
     const res = await axios.post(API_URL, tournamentData);
     return res.data;
   }catch(err){
-    console.error('Error creating Match:', err);
+    console.error('Error creating tournament:', err);
     throw err;
   }
 }

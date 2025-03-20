@@ -64,9 +64,9 @@ const TournamentList = () => {
                 {tournaments.map((tournament, index) => {
                     // Gán màu theo status
                     const statusColorMap = {
-                        Upcoming: "bg-green-500",
-                        Ongoing: "bg-yellow-500",
-                        Ended: "bg-red-500"
+                        Upcoming: "bg-blue-500",
+                        Ongoing: "bg-green-500",
+                        Ended: "bg-gray-500"
                     };
 
                     const status = tournament.status || "Upcoming";

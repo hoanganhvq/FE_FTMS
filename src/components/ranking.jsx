@@ -15,7 +15,8 @@ const Ranking = ({ tournament: initialTournament }) => {
     );
     const [groupInfo, setGroupInfo] = useState([]);
 
-    // Fetch tournament mới nhất từ server
+    const [currentUserId, setCurrentUserId] = useState(null);
+    // Fetch the latest tournament from the server
     const fetchTournament = async () => {
         try {
             setLoading(true);
@@ -33,7 +34,7 @@ const Ranking = ({ tournament: initialTournament }) => {
         }
     };
 
-    // Fetch groups từ server
+    // Fetch groups from the server
     const fetchGroups = async () => {
         try {
             const res = await getGroups(tournament._id);
@@ -58,7 +59,7 @@ const Ranking = ({ tournament: initialTournament }) => {
         }
     };
 
-    // Đánh dấu đã chia bảng và tạo trận đấu
+    // Mark tournament as grouped and matches created
     const markTournamentAsGrouped = async () => {
         try {
             await updateTournament(tournament._id, { 
@@ -72,16 +73,16 @@ const Ranking = ({ tournament: initialTournament }) => {
         }
     };
 
-    // Chia bảng
+    // Divide teams into groups
     const handleGroupTeams = async () => {
         const shuffledTeams = [...teams].sort(() => Math.random() - 0.5);
         const newGrouped = Array.from({ length: numberOfGroups }, () => []);
 
         if (tournament.format === "Round Robin") {
-            // Round-Robin: tất cả đội vào 1 bảng
+            // Round-Robin: all teams in one group
             newGrouped[0] = shuffledTeams;
         } else {
-            // Group Stage: chia đều vào các bảng
+            // Group Stage: distribute teams evenly across groups
             shuffledTeams.forEach((team, index) => {
                 newGrouped[index % numberOfGroups].push(team);
             });
@@ -106,13 +107,13 @@ const Ranking = ({ tournament: initialTournament }) => {
         }
     };
 
-    // Tạo trận đấu dựa trên format
+    // Create matches based on format
     const handleCreateMatches = async () => {
         try {
             setLoading(true);
-            await createGroupMatches(groupInfo); // Giả định API xử lý logic Round-Robin và Group Stage
+            await createGroupMatches(groupInfo); // Assumes API handles Round-Robin and Group Stage logic
             await markTournamentAsGrouped();
-            await fetchGroups(); // Cập nhật lại dữ liệu sau khi tạo trận đấu
+            await fetchGroups(); // Refresh data after creating matches
         } catch (error) {
             console.error("Error creating matches:", error);
         } finally {
@@ -122,6 +123,8 @@ const Ranking = ({ tournament: initialTournament }) => {
 
     useEffect(() => {
         fetchTournament();
+        const user = localStorage.getItem('user');
+        setCurrentUserId(user ? JSON.parse(user).id : null);
     }, [initialTournament._id]);
 
     const renderTeamRow = (team, teamIndex, groupIndex) => {
@@ -164,6 +167,7 @@ const Ranking = ({ tournament: initialTournament }) => {
         );
     };
 
+    const isAdmin = currentUserId === tournament.createdBy ;
     if (loading) {
         return <LoadingScreen message="Loading..." />;
     }
@@ -172,30 +176,30 @@ const Ranking = ({ tournament: initialTournament }) => {
         <div className="min-h-screen bg-gray-900 p-6 flex items-center justify-center">
             <div className="max-w-5xl w-full bg-gray-800 rounded-3xl shadow-2xl p-8 overflow-hidden backdrop-blur-sm">
                 <h2 className="text-3xl font-extrabold mb-8 text-center text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-teal-400 animate-pulse-slow drop-shadow-md">
-                    Bảng Xếp Hạng
+                    Ranking
                 </h2>
                 <h3 className="text-2xl font-semibold mb-6 text-center text-gray-300 animate-slide-in">
-                    {tournament.format === 'Round Robin' ? 'Bảng Xếp Hạng Chung' : 'Vòng Đấu Bảng'}
+                    {tournament.format === 'Round Robin' ? 'Ranking' : 'Group Stage'}
                 </h3>
-                {!isTableCreated && (
+                {!isTableCreated && isAdmin &&(
                     <div className="text-center mb-6">
                         <button
                             onClick={handleGroupTeams}
                             disabled={loading}
                             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300"
                         >
-                            {loading ? 'Đang chia bảng...' : 'Chia Bảng'}
+                            {loading ? 'Creating grouped teams...' : 'Create Grouped Teams'}
                         </button>
                     </div>
                 )}
-                {isTableCreated && !isMatchCreated && (
+                {isTableCreated && !isMatchCreated && isAdmin && (
                     <div className="text-center mb-6">
                         <button
                             onClick={handleCreateMatches}
                             disabled={loading}
                             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300"
                         >
-                            {loading ? 'Đang tạo trận đấu...' : 'Tạo Trận Đấu'}
+                            {loading ? 'Creating matches...' : 'Create Matches'}
                         </button>
                     </div>
                 )}
@@ -203,20 +207,20 @@ const Ranking = ({ tournament: initialTournament }) => {
                     {groupedTeams.map((group, index) => (
                         <div key={index} className="bg-gray-900/30 p-6 rounded-2xl shadow-lg border border-blue-700 backdrop-blur-sm">
                             <h4 className="text-xl font-semibold mb-5 text-blue-400 bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-teal-300 drop-shadow-md">
-                                {tournament.format === 'Round Robin' ? 'Bảng Chung' : `Bảng ${String.fromCharCode(65 + index)}`}
+                                {tournament.format === 'Round Robin' ? 'Group' : `Group ${String.fromCharCode(65 + index)}`}
                             </h4>
                             <table className="w-full text-white border-collapse">
                                 <thead>
                                     <tr className="text-gray-400 border-b border-gray-700">
-                                        <th className="py-3 text-left font-medium">Đội</th>
-                                        <th className="py-3 text-center font-medium">Trận</th>
-                                        <th className="py-3 text-center font-medium">Thắng</th>
-                                        <th className="py-3 text-center font-medium">Hòa</th>
-                                        <th className="py-3 text-center font-medium">Thua</th>
-                                        <th className="py-3 text-center font-medium">HS</th>
-                                        <th className="py-3 text-center font-medium">Thẻ Vàng</th>
-                                        <th className="py-3 text-center font-medium">Thẻ Đỏ</th>
-                                        <th className="py-3 text-center font-medium">Điểm</th>
+                                        <th className="py-3 text-left font-medium">Team</th>
+                                        <th className="py-3 text-center font-medium">Matches</th>
+                                        <th className="py-3 text-center font-medium">Wins</th>
+                                        <th className="py-3 text-center font-medium">Draws</th>
+                                        <th className="py-3 text-center font-medium">Losses</th>
+                                        <th className="py-3 text-center font-medium">GD</th>
+                                        <th className="py-3 text-center font-medium">Yellow Cards</th>
+                                        <th className="py-3 text-center font-medium">Red Cards</th>
+                                        <th className="py-3 text-center font-medium">Points</th>
                                     </tr>
                                 </thead>
                                 <tbody>

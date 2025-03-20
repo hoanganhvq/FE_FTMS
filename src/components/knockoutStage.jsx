@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   getMatchesByTournamentId,
   createMatches,
@@ -18,50 +18,65 @@ const KnockoutStage = ({ tournament, teams }) => {
     team2: "",
     scoreTeam1: "",
     scoreTeam2: "",
+    penaltyTeam1: "",
+    penaltyTeam2: "",
     matchVenue: "",
     matchDate: "",
     matchTime: "",
     status: "Scheduled",
   });
 
+  const hasRun = useRef(false);
+
   const initializePlaceholderRounds = (teamCount) => {
     const roundConfig = {
-      16: [8, 4, 2, 1], // Vòng 1/8 (8 trận), Tứ kết (4), Bán kết (2), Chung kết (1)
-      8: [4, 2, 1],     // Tứ kết (4), Bán kết (2), Chung kết (1)
-      4: [2, 1],        // Bán kết (2), Chung kết (1)
-      2: [1],           // Chung kết (1)
+      16: [8, 4, 2, 1, 1],
+      8: [4, 2, 1, 1],
+      4: [2, 1, 1],
+      2: [1, 1],
     }[teamCount] || [1];
 
-    const roundNames = ["Vòng 1/16", "Vòng 1/8", "Tứ kết", "Bán kết", "Chung kết"];
-    const startIndex = {
-      16: 1, // Bắt đầu từ Vòng 1/8
-      8: 2,  // Bắt đầu từ Tứ kết
-      4: 3,  // Bắt đầu từ Bán kết
-      2: 4,  // Bắt đầu từ Chung kết
-    }[teamCount] || 4; // Chung kết là mặc định nếu teamCount không khớp
+    const roundNames = ["Vòng 1/8", "Tứ kết", "Bán kết", "Chung kết", "Trận tranh hạng ba"];
+    const startIndex = { 16: 0, 8: 1, 4: 2, 2: 3 }[teamCount] || 3;
 
-    return roundConfig.map((matchCount, index) => ({
-      name: roundNames[startIndex + index],
-      roundNumber: index + 1,
-      matches: Array.from({ length: matchCount }, (_, i) => ({
-        _id: `placeholder-${index + 1}-${i}`,
-        team1: null,
-        team2: null,
-        scoreTeam1: null,
-        scoreTeam2: null,
-        matchDate: null,
-        matchTime: null,
-        matchVenue: "Chưa xác định",
-        round: index + 1,
-        tournament: tournament._id,
-        status: "Scheduled",
-        createdAt: new Date(),
-        type: "Knockout",
-      })),
-    }));
+    const rounds = [];
+    let matchIndex = 0;
+
+    roundConfig.forEach((matchCount, index) => {
+      const roundMatches = Array.from({ length: matchCount }, (_, i) => {
+        matchIndex++;
+        return {
+          _id: `placeholder-${index + 1}-${i}`,
+          team1: null,
+          team2: null,
+          scoreTeam1: null,
+          scoreTeam2: null,
+          penaltyTeam1: null,
+          penaltyTeam2: null,
+          matchDate: null,
+          matchTime: null,
+          matchVenue: "Chưa xác định",
+          round: index === roundConfig.length - 1 && teamCount >= 4 ? 0 : index + 1,
+          tournament: tournament._id,
+          status: "Scheduled",
+          createdAt: new Date(),
+          type: "Knockout",
+        };
+      });
+      rounds.push({
+        name: roundNames[startIndex + index],
+        roundNumber: index === roundConfig.length - 1 && teamCount >= 4 ? 0 : index + 1,
+        matches: roundMatches,
+      });
+    });
+
+    return rounds;
   };
 
   useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
     const setupKnockoutStage = async () => {
       const teamCount = tournament.number_of_team_advances || 16;
       setRounds(initializePlaceholderRounds(teamCount));
@@ -70,11 +85,20 @@ const KnockoutStage = ({ tournament, teams }) => {
       try {
         const allMatches = await getMatchesByTournamentId(tournament._id);
         const knockoutMatches = allMatches.filter(
-          (match) => match.round && match.round >= 1 && match.type === "Knockout"
+          (match) => match.type === "Knockout" && match.round >= 0
         );
+        const totalExpectedMatches = getTotalMatches(teamCount);
         let matches = knockoutMatches;
-        if (knockoutMatches.length < getTotalMatches(teamCount)) {
-          matches = await generateKnockoutMatches(teamCount, tournament._id);
+
+        console.log("Existing knockout matches:", knockoutMatches.length);
+        console.log("Total expected matches:", totalExpectedMatches);
+
+        if (knockoutMatches.length < totalExpectedMatches) {
+          matches = await generateKnockoutMatches(
+            teamCount,
+            tournament._id,
+            totalExpectedMatches - knockoutMatches.length
+          );
         }
         const updatedRounds = organizeMatchesIntoRounds(matches, teamCount);
         setRounds(updatedRounds);
@@ -91,77 +115,91 @@ const KnockoutStage = ({ tournament, teams }) => {
   }, [tournament._id, tournament.number_of_team_advances]);
 
   const getTotalMatches = (teamCount) => {
-    const roundConfig = {
-      16: [8, 4, 2, 1],
-      8: [4, 2, 1],
-      4: [2, 1],
-      2: [1],
-    }[teamCount] || [1];
-    return roundConfig.reduce((sum, count) => sum + count, 0);
+    return teamCount;
   };
 
-  const generateKnockoutMatches = async (teamCount, tournamentId) => {
+  const generateKnockoutMatches = async (teamCount, tournamentId, missingMatchesCount) => {
     const roundConfig = {
-      16: [8, 4, 2, 1],
-      8: [4, 2, 1],
-      4: [2, 1],
-      2: [1],
+      16: [8, 4, 2, 1, 1],
+      8: [4, 2, 1, 1],
+      4: [2, 1, 1],
+      2: [1, 1],
     }[teamCount] || [1];
 
-    const matches = [];
-    roundConfig.forEach((matchCount, roundIndex) => {
-      const roundNumber = roundIndex + 1;
-      for (let i = 0; i < matchCount; i++) {
-        matches.push({
+    const newMatches = [];
+    let remainingMatches = missingMatchesCount;
+
+    for (let i = 0; i < roundConfig.length && remainingMatches > 0; i++) {
+      const matchesInRound = Math.min(roundConfig[i], remainingMatches);
+      for (let j = 0; j < matchesInRound; j++) {
+        newMatches.push({
           tournament: tournamentId,
-          round: roundNumber,
+          round: i === roundConfig.length - 1 && teamCount >= 4 ? 0 : i + 1,
           matchVenue: "Chưa xác định",
           status: "Scheduled",
           team1: null,
           team2: null,
           scoreTeam1: null,
           scoreTeam2: null,
+          penaltyTeam1: null,
+          penaltyTeam2: null,
           matchDate: null,
           matchTime: null,
           type: "Knockout",
         });
+        remainingMatches--;
       }
-    });
+    }
+
+    console.log("New matches to create:", newMatches.length);
 
     try {
-      const createdMatches = await createMatches(matches);
-      return createdMatches;
+      if (newMatches.length > 0) {
+        const createdMatches = await createMatches(newMatches);
+        const allMatches = await getMatchesByTournamentId(tournamentId);
+        return allMatches
+          .filter((match) => match.type === "Knockout" && match.round >= 0)
+          .slice(0, teamCount);
+      }
+      return (await getMatchesByTournamentId(tournamentId))
+        .filter((match) => match.type === "Knockout" && match.round >= 0)
+        .slice(0, teamCount);
     } catch (error) {
       console.error("Failed to create matches via API:", error);
-      return matches;
+      return newMatches;
     }
   };
 
   const organizeMatchesIntoRounds = (matches, teamCount) => {
     const roundConfig = {
-      16: [8, 4, 2, 1],
-      8: [4, 2, 1],
-      4: [2, 1],
-      2: [1],
+      16: [8, 4, 2, 1, 1],
+      8: [4, 2, 1, 1],
+      4: [2, 1, 1],
+      2: [1, 1],
     }[teamCount] || [1];
 
-    const roundNames = ["Vòng 1/16", "Vòng 1/8", "Tứ kết", "Bán kết", "Chung kết"];
-    const startIndex = {
-      16: 1, // Vòng 1/8
-      8: 2,  // Tứ kết
-      4: 3,  // Bán kết
-      2: 4,  // Chung kết
-    }[teamCount] || 4;
+    const roundNames = ["Vòng 1/8", "Tứ kết", "Bán kết", "Trận tranh hạng ba", "Chung kết"];
+    const startIndex = { 16: 0, 8: 1, 4: 2, 2: 3 }[teamCount] || 3;
 
-    return roundConfig.map((matchCount, index) => {
-      const roundNumber = index + 1;
-      const roundMatches = matches.filter((match) => match.round === roundNumber);
-      return {
-        name: roundNames[startIndex + index],
-        roundNumber,
-        matches: roundMatches.slice(0, matchCount),
-      };
+    const rounds = [];
+    let matchIndex = 0;
+
+    roundConfig.forEach((matchCount, index) => {
+      const roundNumber = index === roundConfig.length - 1 && teamCount >= 4 ? 0 : index + 1;
+      const roundMatches = matches
+        .filter((match) => match.round === roundNumber)
+        .slice(0, matchCount);
+      if (roundMatches.length > 0) {
+        rounds.push({
+          name: roundNames[startIndex + index],
+          roundNumber,
+          matches: roundMatches,
+        });
+      }
+      matchIndex += matchCount;
     });
+
+    return rounds;
   };
 
   const isAdmin = currentUserId && currentUserId === tournament.createdBy?.toString();
@@ -173,6 +211,8 @@ const KnockoutStage = ({ tournament, teams }) => {
       team2: match.team2?._id || match.team2 || "",
       scoreTeam1: match.scoreTeam1 || "",
       scoreTeam2: match.scoreTeam2 || "",
+      penaltyTeam1: match.penaltyTeam1 || "",
+      penaltyTeam2: match.penaltyTeam2 || "",
       matchVenue: match.matchVenue || "Chưa xác định",
       matchDate: match.matchDate ? new Date(match.matchDate).toISOString().split("T")[0] : "",
       matchTime: match.matchTime ? new Date(match.matchTime).toISOString().substr(11, 5) : "",
@@ -192,6 +232,8 @@ const KnockoutStage = ({ tournament, teams }) => {
         team2: editForm.team2 || null,
         scoreTeam1: editForm.scoreTeam1 ? parseInt(editForm.scoreTeam1) : null,
         scoreTeam2: editForm.scoreTeam2 ? parseInt(editForm.scoreTeam2) : null,
+        penaltyTeam1: editForm.penaltyTeam1 ? parseInt(editForm.penaltyTeam1) : null,
+        penaltyTeam2: editForm.penaltyTeam2 ? parseInt(editForm.penaltyTeam2) : null,
         matchVenue: editForm.matchVenue || "Chưa xác định",
         matchDate: editForm.matchDate ? `${editForm.matchDate}T00:00:00Z` : null,
         matchTime: editForm.matchTime
@@ -199,13 +241,13 @@ const KnockoutStage = ({ tournament, teams }) => {
           : null,
         status: editForm.status,
       };
-      console.log("editMatchId: ", editingMatchId);
-      console.log("UpdateMatching id: ", updatedMatch);
       await updateMatch(editingMatchId, updatedMatch);
       const refreshedMatches = await getMatchesByTournamentId(tournament._id);
       setRounds(
         organizeMatchesIntoRounds(
-          refreshedMatches.filter((m) => m.round >= 1),
+          refreshedMatches
+            .filter((m) => m.type === "Knockout" && m.round >= 0)
+            .slice(0, tournament.number_of_team_advances || 16),
           tournament.number_of_team_advances || 16
         )
       );
@@ -263,13 +305,23 @@ const KnockoutStage = ({ tournament, teams }) => {
                 >
                   <div className="flex justify-between items-center">
                     <span className="text-white truncate w-1/3">{getTeamName(match.team1)}</span>
-                    <span className="text-blue-400 font-bold">
-                      {match.scoreTeam1 !== null ? match.scoreTeam1 : "-"}
-                    </span>
+                    <div className="flex flex-col items-center">
+                      <span className="text-blue-400 font-bold">
+                        {match.scoreTeam1 !== null ? match.scoreTeam1 : "-"}
+                      </span>
+                      {match.penaltyTeam1 !== null && (
+                        <span className="text-blue-300 text-sm">({match.penaltyTeam1})</span>
+                      )}
+                    </div>
                     <span className="text-gray-400">vs</span>
-                    <span className="text-blue-400 font-bold">
-                      {match.scoreTeam2 !== null ? match.scoreTeam2 : "-"}
-                    </span>
+                    <div className="flex flex-col items-center">
+                      <span className="text-blue-400 font-bold">
+                        {match.scoreTeam2 !== null ? match.scoreTeam2 : "-"}
+                      </span>
+                      {match.penaltyTeam2 !== null && (
+                        <span className="text-blue-300 text-sm">({match.penaltyTeam2})</span>
+                      )}
+                    </div>
                     <span className="text-white truncate w-1/3">{getTeamName(match.team2)}</span>
                   </div>
                   <div className="text-center text-gray-400 text-sm mt-2">
@@ -356,6 +408,27 @@ const KnockoutStage = ({ tournament, teams }) => {
                     onChange={handleEditChange}
                     className="w-1/2 p-2 bg-gray-700 text-white rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="0"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Tỷ số penalty (nếu có)</label>
+                <div className="flex space-x-3 mt-1">
+                  <input
+                    name="penaltyTeam1"
+                    type="number"
+                    value={editForm.penaltyTeam1}
+                    onChange={handleEditChange}
+                    className="w-1/2 p-2 bg-gray-700 text-white rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    placeholder="Penalty Đội 1"
+                  />
+                  <input
+                    name="penaltyTeam2"
+                    type="number"
+                    value={editForm.penaltyTeam2}
+                    onChange={handleEditChange}
+                    className="w-1/2 p-2 bg-gray-700 text-white rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    placeholder="Penalty Đội 2"
                   />
                 </div>
               </div>

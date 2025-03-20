@@ -4,80 +4,20 @@ import GeneralNews from '../components/generalNews';
 import Ranking from '../components/ranking';
 import GroupStage from '../components/groupStage';
 import KnockoutStage from '../components/knockoutStage';
-import DivideGroups from '../components/divideGroup';
-import LoadingScreen from "./loadingScreen";
-import {getGroups} from '../api/groupAPI';
+
+
 const ManageTournament = () => {
-    const [activeTab, setActiveTab] = useState('tin-chung');
-    const [loading, setLoading] = useState(false);
-    const { id } = useParams(); // Lấy id từ URL
-    const location = useLocation(); // Lấy state từ navigation
-    const { tournament } = location.state || {}; // Lấy thông tin giải đấu từ state
-    const [teams, setTeams] = useState([]);
-    const fakeTeamsData = [
-        {
-            id: 1,
-            name: "Đội 1",
-            logo: "https://via.placeholder.com/20",
-            matchesPlayed: 3,
-            wins: 2,
-            draws: 1,
-            losses: 0,
-            goalDifference: "+3",
-            points: 7,
-            yellowCards: 4,
-            redCards: 1,
-        },
-        {
-            id: 2,
-            name: "Đội 2",
-            logo: "https://via.placeholder.com/20",
-            matchesPlayed: 3,
-            wins: 1,
-            draws: 1,
-            losses: 1,
-            goalDifference: "+1",
-            points: 4,
-            yellowCards: 2,
-            redCards: 0,
-        },
-        {
-            id: 3,
-            name: "Đội 3",
-            logo: "https://via.placeholder.com/20",
-            matchesPlayed: 3,
-            wins: 3,
-            draws: 0,
-            losses: 0,
-            goalDifference: "+5",
-            points: 9,
-            yellowCards: 1,
-            redCards: 0,
-        },
-        {
-            id: 4,
-            name: "Đội 4",
-            logo: "https://via.placeholder.com/20",
-            matchesPlayed: 3,
-            wins: 0,
-            draws: 1,
-            losses: 2,
-            goalDifference: "-2",
-            points: 1,
-            yellowCards: 5,
-            redCards: 2,
-        },
-    ];
+    const [activeTab, setActiveTab] = useState('general');
+    const { id } = useParams(); // Get id from URL
+    const location = useLocation(); // Get state from navigation
+    const { tournament } = location.state || {}; // Get tournament info from state
+    console.log("Manage: ", tournament);
 
-    const fetchGroup = () =>{
-        
-    }
-
-    // Kiểm tra nếu không có dữ liệu giải đấu
+    // Check if tournament data is missing
     if (!tournament) {
         return (
             <div className="p-4">
-                <h1 className="text-2xl font-bold mb-4 text-white animate-pulse">Lỗi: Không tìm thấy thông tin giải đấu</h1>
+                <h1 className="text-2xl font-bold mb-4 text-white animate-pulse">Error: Tournament information not found</h1>
                 <h1 className="text-2xl font-bold mb-4 text-white animate-pulse">ID: {id}</h1>
             </div>
         );
@@ -96,61 +36,59 @@ const ManageTournament = () => {
                 {/* Tabs */}
                 <div className="flex flex-wrap justify-center gap-4 border-b border-gray-700 mb-6">
                     <button
-                        className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'tin-chung' ? 'bg-blue-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
-                        onClick={() => setActiveTab('tin-chung')}
+                        className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'general' ? 'bg-blue-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
+                        onClick={() => setActiveTab('general')}
                     >
-                        Tin Chung
+                        General
                     </button>
-                    {tournament.format ==="Group Stage" && (
+                    {tournament.format === "Group Stage" && (
                         <>
                             <button
-                                className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'vong-bang' ? 'bg-teal-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
-                                onClick={() => setActiveTab('vong-bang')}
+                                className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'group-stage' ? 'bg-teal-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
+                                onClick={() => setActiveTab('group-stage')}
                             >
-                                Vòng Bảng
+                                Group Stage
                             </button>
                             <button
-                                className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'vong-loai-truc-tiep' ? 'bg-pink-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
-                                onClick={() => setActiveTab('vong-loai-truc-tiep')}
+                                className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'knockout-stage' ? 'bg-pink-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
+                                onClick={() => setActiveTab('knockout-stage')}
                             >
-                                Vòng Loại Trực Tiếp
+                                Knockout Stage
                             </button>
                         </>
                     )}
                     {tournament.format === "Round Robin" && (
                         <button
-                            className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'lich-thi-dau' ? 'bg-green-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
-                            onClick={() => setActiveTab('lich-thi-dau')}
+                            className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'schedule' ? 'bg-green-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
+                            onClick={() => setActiveTab('schedule')}
                         >
-                            Lịch Thi Đấu
+                            Schedule
                         </button>
                     )}
                     <button
-                        className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'bang-xep-hang' ? 'bg-purple-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
-                        onClick={() => setActiveTab('bang-xep-hang')}
+                        className={`py-3 px-6 rounded-t-xl font-semibold transition duration-300 transform ${activeTab === 'ranking' ? 'bg-purple-500 text-white shadow-md scale-105' : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200 hover:scale-102'}`}
+                        onClick={() => setActiveTab('ranking')}
                     >
-                        Bảng Xếp Hạng
+                        Ranking
                     </button>
-                
-
                 </div>
 
-                {/* Nội dung tab */}
+                {/* Tab Content */}
                 <div className="min-h-[400px] animate-fade-in">
-                    {activeTab === 'tin-chung' && (
-                        <GeneralNews tournament={tournament}/>
+                    {activeTab === 'general' && (
+                        <GeneralNews tournament={tournament} teams={tournament.teams}/>
                     )}
-                    {activeTab === 'lich-thi-dau' && (
+                    {activeTab === 'schedule' && (
                         <GroupStage tournament={tournament} />
                     )}
-                    {activeTab === 'vong-bang' && (
+                    {activeTab === 'group-stage' && (
                         <GroupStage tournament={tournament} />
                     )}
-                    {activeTab === 'vong-loai-truc-tiep' && (
+                    {activeTab === 'knockout-stage' && (
                         <KnockoutStage tournament={tournament} teams={tournament.teams} />
                     )}
-                    {activeTab === 'bang-xep-hang' && (
-                        <Ranking tournament={tournament}/>
+                    {activeTab === 'ranking' && (
+                        <Ranking tournament={tournament} />
                     )}
                 </div>
             </div>
