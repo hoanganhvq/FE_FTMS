@@ -14,7 +14,7 @@ const NewTournamentForm = () => {
     number_of_rounds: 1,
     number_of_team_advances: 2,
     number_of_teams: 4,
-    number_of_group: 2,
+    number_of_group: 1,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -51,7 +51,7 @@ const NewTournamentForm = () => {
       ...tournamentData,
       number_of_member: tournamentData.number_of_member || 1,
       number_of_rounds: tournamentData.number_of_rounds || 1,
-      number_of_team_advances: tournamentData.number_of_team_advances || 2,
+      number_of_team_advances: tournamentData.number_of_team_advances || 1,
       number_of_teams: tournamentData.number_of_teams || 1,
       number_of_group: tournamentData.number_of_group || 1,
       createdBy: user.id || null,
@@ -222,24 +222,6 @@ const NewTournamentForm = () => {
               className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20"
             />
           </div>
-
-          {/* Round Robin Specific */}
-          {isRoundRobin && (
-            <div className="relative group">
-              <label className="block text-sm font-medium text-gray-300 mb-2 group-hover:text-teal-300 transition-colors duration-200">
-                Number of Rounds
-              </label>
-              <input
-                type="number"
-                name="number_of_rounds"
-                value={tournamentData.number_of_rounds}
-                onChange={handleChange}
-                min="1"
-                required={isRoundRobin}
-                className="w-full px-5 py-3 bg-gray-900/70 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 text-white hover:bg-gray-900/90 shadow-sm hover:shadow-teal-500/20"
-              />
-            </div>
-          )}
 
           {/* Group Stage Specific */}
           {isGroupStage && (

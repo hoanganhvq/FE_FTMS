@@ -14,6 +14,9 @@ const GeneralNews = ({ tournament, }) => {
         setData: {},
     };
     const [state, setState] = useState(initialState);
+    const [champion1, setChampion] = useState(null);
+    const [runnerUp2, setRunnerUp ] = useState(null);
+    const [thirdPlace3, setThirdPlace] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
 
     const fetchData = async () => {
@@ -78,13 +81,17 @@ const GeneralNews = ({ tournament, }) => {
                 getWinnerAndRunner(tournament._id, finalAndThirdMatch.roundNumberFinal),
                 getThirdPlace(tournament._id, finalAndThirdMatch.roundNumberThird),
             ]);
-    
-            if (
-                !winnerAndRunner || 
-                !winnerAndRunner.winner || 
-                !winnerAndRunner.runner || 
-                (!thirdPlace && finalAndThirdMatch.roundNumberThird !== undefined) // thirdPlace must exist if applicable
-            ) {
+            console.log("Data winner and runner: ", winnerAndRunner);
+            console.log("Data winner: ", winnerAndRunner.winner);
+            console.log("Data runner: ", winnerAndRunner.runnerUp);
+            console.log("Data third: ", thirdPlace);
+            setChampion(winnerAndRunner.winner);
+            setRunnerUp(winnerAndRunner.runnerUp);
+            setThirdPlace(thirdPlace);
+            console.log("Data champion: ", champion1);
+            console.log("Data Runner: ", runnerUp2);
+            console.log("Data Third: ", thirdPlace3);
+            if (!winnerAndRunner ) {
                 alert("Cannot end tournament: Champion, Runner-Up, or Third Place is not determined yet.");
                 return; // Dừng hàm nếu không đủ dữ liệu
             }
@@ -213,8 +220,7 @@ const GeneralNews = ({ tournament, }) => {
                     </div>
                 </section>
 
-                {/* Team Statistics */}
-                {tournamentStatus === "Ended" && (
+                {tournamentStatus === "Ended" && tournament.format === "Group Stage" && (
                     <section className="mt-8">
                         <h4 className="text-2xl font-bold text-white mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 animate-pulse-slow">
                             🏆 Top Teams
@@ -223,21 +229,21 @@ const GeneralNews = ({ tournament, }) => {
                             {[
                                 {
                                     label: "Champion ",
-                                    value: "To be determined",
+                                    value: champion1.name,
                                     color: "from-yellow-400 to-yellow-600",
                                     medal: "🥇",
                                     shadow: "shadow-yellow-500/50",
                                 },
                                 {
                                     label: "Runner-Up",
-                                    value: "To be determined",
+                                    value: runnerUp2.name,
                                     color: "from-gray-300 to-gray-500",
                                     medal: "🥈",
-                                    shadow: "shadow-gray-500/50",
+                                    shadow: "shadow-gray-500/50", 
                                 },
                                 {
                                     label: "Third Place",
-                                    value: "To be determined",
+                                    value: thirdPlace3.name,
                                     color: "from-orange-400 to-orange-600",
                                     medal: "🥉",
                                     shadow: "shadow-orange-500/50",
