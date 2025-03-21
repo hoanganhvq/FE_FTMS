@@ -73,7 +73,7 @@ export const getTeamsById = async(ids) =>{
 
 export const addPlayerIntoTeam = async(id, playerData) =>{
     try{
-        const res  = await axios.post(`${API_URL}/addPlayer/${id}`, playerData);
+        const res  = await axios.post(`${API_URL}/add-player/${id}`, {playerData: playerData});
         return res.data
     }catch(error){
         console.error("Error adding player to team ", error);
@@ -85,10 +85,24 @@ export const addPlayerIntoTeam = async(id, playerData) =>{
 export const toReckonTeam = async(id)=>{
     try{
         const res = await axios.get(`${API_URL}/statistic/${id}`);
-        return res.data
+        return res.data;
     }catch(error){
         console.log("Error to reckon team: ", error);
         throw error;
     }
 
+}
+
+export const getTeamByUserId = async(token) =>{
+    try{
+        const res = await axios.get(`${API_URL}/my-team`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+        return res.data;
+    }catch(error){
+        console.error("Error fetching team by user: ", error);
+        throw error;
+    }
 }

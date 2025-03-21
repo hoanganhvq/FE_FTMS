@@ -5,23 +5,14 @@ import { ChevronDoubleLeftIcon, TrophyIcon, XCircleIcon } from "@heroicons/react
 import TournamentCardSkeleton from "../components/TournamentSkeleton";
 import LoadingScreen from './loadingScreen';
 import { getTournaments, updateTournament } from '../api/tounamentAPI';
-const TournamentLabel = ({ selectedTournament }) => {
+const TournamentLabel = () => {
     return (
         <div
             className="bg-slate-700  text-[15px] mb-7 gap-2 p-2 flex drop-shadow-xl place-items-center place-content-center font-semibold text-slate-300">
-            {!selectedTournament ?
-                <div className="bg-sky-400 px-3 text-[12px] drop-shadow-lg
-                    font-bold text-slate-900 rounded-xl">TOURNAMENTS</div> :
-                <div className="flex gap-2 ">
-                    <div className="font-semibold text-[12px]">
-                        {selectedTournament.tournament_name.toUpperCase()}
-                    </div>
-                    <div
-                        className="bg-rose-300 px-2 text-[10px] grid place-content-center place-self-center drop-shadow-lg font-bold text-slate-900 rounded-xl">
-                        GROUP-STAGES
-                    </div>
-                </div>
-            }
+           
+                <div className="bg-sky-400 px-3 text-[16px] drop-shadow-lg
+                    font-bold text-slate-900 rounded-xl">TOURNAMENTS</div> 
+
         </div>
     );
 }
@@ -143,8 +134,8 @@ const TournamentDetails = () => {
         return <LoadingScreen message="Loading tournaments..." />
     }
     return (
+        
         <div className="bg-slate-900 text-slate-300">
-            <TournamentLabel selectedTournament={selectedTournament} />
             <div className="grid justify-center">
 
                 <div className="grid gap-10 md:grid-cols-3 p-6">

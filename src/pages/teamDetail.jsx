@@ -9,7 +9,7 @@ const TeamDetail = () => {
     const [statistics, setStatistics] = useState(null);
     const [error, setError] = useState(null);
     const location = useLocation();
-    const [club, setClub] = useState(location?.state?.club || null); // Sửa typo setClubs -> setClub
+    const [club, setClub] = useState(location?.state?.club || null);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [activeTab, setActiveTab] = useState("about");
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,7 +31,7 @@ const TeamDetail = () => {
     const fetchTeamData = async () => {
         setLoading(true);
         try {
-            const res = await getTeamById(id); // Dùng await để lấy dữ liệu
+            const res = await getTeamById(id);
             console.log("Team data after Update: ", res);
             setClub(res);
             setEditData({
@@ -54,7 +54,7 @@ const TeamDetail = () => {
     };
 
     const fetchStatistics = async () => {
-        if (!club?._id) return; 
+        if (!club?._id) return;
         setLoading(true);
         setError(null);
         try {
@@ -63,7 +63,7 @@ const TeamDetail = () => {
             setStatistics(res);
         } catch (error) {
             console.error("Error fetching statistics: ", error);
-            setError("Failed to load statistics.");
+            setError("Don't have statistics.");
         } finally {
             setLoading(false);
         }
@@ -74,9 +74,9 @@ const TeamDetail = () => {
         setCurrentUserId(user ? JSON.parse(user).id : null);
 
         if (!club) {
-            fetchTeamData(); 
+            fetchTeamData();
         } else {
-            fetchStatistics(); 
+            fetchStatistics();
             setEditData({
                 club_name: club.name || "",
                 location: club.location || "",
@@ -101,7 +101,7 @@ const TeamDetail = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const isCreator = currentUserId === club?.createdBy?._id; 
+    const isCreator = currentUserId === club?.createdBy?._id;
 
     const handleEditClick = () => {
         setIsModalOpen(true);
@@ -135,8 +135,8 @@ const TeamDetail = () => {
     const handleSave = async () => {
         console.log("Saving edited data: ", editData);
         try {
-            await updateTeam(id, editData); // Dùng id từ useParams
-            await fetchTeamData(); // Fetch lại dữ liệu sau khi cập nhật
+            await updateTeam(id, editData);
+            await fetchTeamData();
         } catch (error) {
             console.error("Error saving edited data: ", error);
             setError("Failed to save changes.");
@@ -146,24 +146,24 @@ const TeamDetail = () => {
 
     if (!club && loading) {
         return (
-            <div className="p-6 text-white min-h-screen flex justify-center items-center bg-gradient-to-br from-gray-900 to-gray-700">
-                <p className="text-xl">Loading...</p>
+            <div className="p-8 text-white min-h-screen flex justify-center items-center bg-gradient-to-br from-gray-900 to-gray-700">
+                <p className="text-2xl">Loading...</p>
             </div>
         );
     }
 
     if (!club) {
         return (
-            <div className="p-6 text-white min-h-screen flex justify-center items-center bg-gradient-to-br from-gray-900 to-gray-700">
-                <p className="text-xl">Club information not found.</p>
+            <div className="p-8 text-white min-h-screen flex justify-center items-center bg-gradient-to-br from-gray-900 to-gray-700">
+                <p className="text-2xl">Club information not found.</p>
             </div>
         );
     }
 
     return (
-        <div className="p-6 min-h-screen flex justify-center items-center bg-gradient-to-br from-gray-900 to-gray-700">
-            <div className="max-w-4xl w-full bg-gray-800 p-8 rounded-3xl shadow-2xl border border-gray-700">
-                <div className="relative h-64 rounded-lg overflow-hidden">
+        <div className="p-8 min-h-screen flex justify-center items-center bg-gradient-to-br from-gray-900 to-gray-700">
+            <div className="max-w-6xl w-full bg-gray-800 p-10 rounded-3xl shadow-2xl border border-gray-700">
+                <div className="relative h-80 rounded-lg overflow-hidden">
                     {club.image && (
                         <img src={club.image} alt="Club" className="w-full h-full object-cover brightness-75" />
                     )}
@@ -172,22 +172,22 @@ const TeamDetail = () => {
                             <img
                                 src={club.logo}
                                 alt="Logo"
-                                className="w-24 h-24 rounded-full border-4 border-white shadow-xl"
+                                className="w-28 h-28 rounded-full border-4 border-white shadow-xl"
                             />
                         </div>
                     )}
                 </div>
 
-                <div className="mt-16 text-center">
-                    <h1 className="text-4xl font-extrabold text-white drop-shadow-lg">
+                <div className="mt-20 text-center">
+                    <h1 className="text-5xl font-extrabold text-white drop-shadow-lg">
                         {club.name || "Club Name"}
                     </h1>
-                    <p className="text-gray-300 mt-2 text-lg">
+                    <p className="text-gray-300 mt-3 text-xl">
                         {club.location ? `${club.location}` : "No location available"}
                     </p>
                 </div>
 
-                <div className="mt-8 flex justify-center space-x-4">
+                <div className="mt-10 flex justify-center space-x-6">
                     {[
                         { key: "about", label: "About" },
                         { key: "members", label: `Members (${club.members || 0})` },
@@ -196,7 +196,7 @@ const TeamDetail = () => {
                         <button
                             key={key}
                             onClick={() => setActiveTab(key)}
-                            className={`px-6 py-2 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg transform hover:scale-105 ${
+                            className={`px-8 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg transform hover:scale-105 ${
                                 activeTab === key ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                             }`}
                         >
@@ -205,32 +205,32 @@ const TeamDetail = () => {
                     ))}
                 </div>
 
-                <div className="mt-8">
+                <div className="mt-10">
                     {activeTab === "about" && (
-                        <div className="space-y-6">
-                            <div className="bg-gray-700 p-6 rounded-lg shadow-md">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-xl font-semibold text-blue-400">About</h2>
+                        <div className="space-y-8">
+                            <div className="bg-gray-700 p-8 rounded-lg shadow-md">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-semibold text-blue-400">About</h2>
                                     {isCreator && (
                                         <button
                                             onClick={handleEditClick}
-                                            className="px-4 py-2 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg transform hover:scale-105 bg-green-500 text-white hover:bg-green-600"
+                                            className="px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg transform hover:scale-105 bg-green-500 text-white hover:bg-green-600"
                                         >
                                             Edit
                                         </button>
                                     )}
                                 </div>
-                                <div className="space-y-4 text-gray-300">
+                                <div className="space-y-6 text-gray-300 text-lg">
                                     <p><strong>Club Name:</strong> {club.name || "Not available"}</p>
                                     <p><strong>Location:</strong> {club.location || "Not available"}</p>
                                     <div>
                                         <strong>Jersey Colors:</strong>
                                         {club.jersey_color && club.jersey_color.length > 0 ? (
-                                            <div className="flex flex-wrap gap-2 mt-2">
+                                            <div className="flex flex-wrap gap-3 mt-3">
                                                 {club.jersey_color.map((color, index) => (
-                                                    <div key={index} className="flex items-center gap-2">
+                                                    <div key={index} className="flex items-center gap-3">
                                                         <div
-                                                            className="w-6 h-6 rounded-full border-2 border-gray-600"
+                                                            className="w-8 h-8 rounded-full border-2 border-gray-600"
                                                             style={{ backgroundColor: color }}
                                                         ></div>
                                                         <span>{color}</span>
@@ -245,9 +245,9 @@ const TeamDetail = () => {
                                     <p><strong>Description:</strong> {club.description || "Not available"}</p>
                                 </div>
                             </div>
-                            <div className="bg-gray-700 p-6 rounded-lg shadow-md">
-                                <h2 className="text-xl font-semibold text-blue-400 mb-4">Contact</h2>
-                                <div className="space-y-4 text-gray-300">
+                            <div className="bg-gray-700 p-8 rounded-lg shadow-md">
+                                <h2 className="text-2xl font-semibold text-blue-400 mb-6">Contact</h2>
+                                <div className="space-y-6 text-gray-300 text-lg">
                                     <p><strong>Contact Person:</strong> {club.contact_person_name || "Not available"}</p>
                                     <p><strong>Phone:</strong> {club.phone || "Not available"}</p>
                                     {club.facebook_link && (
@@ -282,43 +282,43 @@ const TeamDetail = () => {
                     )}
 
                     {activeTab === "members" && (
-                        <div className="bg-gray-700 p-6 rounded-lg shadow-md">
-                            <h2 className="text-xl font-semibold text-blue-400 mb-4">Members ({club.members || 0})</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="bg-gray-700 p-8 rounded-lg shadow-md">
+                            <h2 className="text-2xl font-semibold text-blue-400 mb-6">Members ({club.members || 0})</h2>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                                 {club.players && club.players.length > 0 ? (
                                     club.players.map((member, index) => (
                                         <div
                                             key={index}
-                                            className="relative bg-gray-800 p-4 rounded-lg shadow-lg hover:shadow-xl transition-all flex flex-col items-center border-2 border-blue-500"
+                                            className="relative bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-all flex flex-col items-center border-2 border-blue-500"
                                         >
                                             <img
                                                 src={member.avatar}
                                                 alt={member.name}
-                                                className="w-24 h-24 object-cover border-4 border-white shadow-md rounded-md"
+                                                className="w-28 h-28 object-cover border-4 border-white shadow-md rounded-md"
                                             />
-                                            <p className="font-medium text-white mt-3 text-lg">{member.name || "Unnamed"}</p>
-                                            <p className="text-gray-300 text-sm">{member.position || "No position"}</p>
-                                            <span className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 text-xs font-bold rounded-lg shadow-md">
+                                            <p className="font-medium text-white mt-4 text-xl">{member.name || "Unnamed"}</p>
+                                            <p className="text-gray-300 text-base">{member.position || "No position"}</p>
+                                            <span className="absolute top-3 left-3 bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-md">
                                                 #{member.number || "N/A"}
                                             </span>
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-gray-300 text-center col-span-full">No members available.</p>
+                                    <p className="text-gray-300 text-center col-span-full text-lg">No members available.</p>
                                 )}
                             </div>
                         </div>
                     )}
 
                     {activeTab === "stats" && (
-                        <div className="bg-gray-700 p-6 rounded-lg shadow-md">
-                            <h2 className="text-xl font-semibold text-blue-400 mb-4">Statistics</h2>
+                        <div className="bg-gray-700 p-8 rounded-lg shadow-md">
+                            <h2 className="text-2xl font-semibold text-blue-400 mb-6">Statistics</h2>
                             {loading ? (
-                                <p className="text-gray-300 text-center">Loading statistics...</p>
+                                <p className="text-gray-300 text-center text-lg">Loading statistics...</p>
                             ) : error ? (
-                                <p className="text-red-400 text-center">{error}</p>
+                                <p className="text-red-400 text-center text-lg">{error}</p>
                             ) : statistics ? (
-                                <div className="grid grid-cols-2 gap-4 text-gray-300 text-lg font-semibold">
+                                <div className="grid grid-cols-2 gap-6 text-gray-300 text-lg font-semibold">
                                     {[
                                         { label: "Total Matches", value: statistics.totalMatches || 0, color: "text-blue-400" },
                                         { label: "Wins", value: statistics.wins || 0, color: "text-green-400" },
@@ -329,15 +329,15 @@ const TeamDetail = () => {
                                     ].map(({ label, value, color }, index) => (
                                         <div
                                             key={index}
-                                            className="bg-gray-800 p-4 rounded-lg shadow-md text-center border-2 border-gray-600 hover:border-gray-400 transition-all"
+                                            className="bg-gray-800 p-6 rounded-lg shadow-md text-center border-2 border-gray-600 hover:border-gray-400 transition-all"
                                         >
-                                            <p className={`${color} text-lg font-bold`}>{label}</p>
-                                            <p className="text-white text-3xl font-extrabold">{value}</p>
+                                            <p className={`${color} text-xl font-bold`}>{label}</p>
+                                            <p className="text-white text-4xl font-extrabold">{value}</p>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-gray-300 text-center">No statistics available.</p>
+                                <p className="text-gray-300 text-center text-lg">No statistics available.</p>
                             )}
                         </div>
                     )}
@@ -346,36 +346,36 @@ const TeamDetail = () => {
                 {/* Modal chỉnh sửa */}
                 {isModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
-                            <h2 className="text-2xl font-semibold text-white mb-4">Edit Team Details</h2>
-                            <div className="space-y-4 text-gray-300">
+                        <div className="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-xl max-h-[85vh] overflow-y-auto">
+                            <h2 className="text-3xl font-semibold text-white mb-6">Edit Team Details</h2>
+                            <div className="space-y-6 text-gray-300">
                                 {/* About */}
                                 <div>
-                                    <label className="block text-sm font-medium">Club Name</label>
+                                    <label className="block text-base font-medium">Club Name</label>
                                     <input
                                         type="text"
                                         name="club_name"
                                         value={editData.club_name}
                                         onChange={handleEditChange}
-                                        className="w-full p-2 mt-1 rounded-md bg-gray-700 border border-gray-600 text-white"
+                                        className="w-full p-3 mt-2 rounded-md bg-gray-700 border border-gray-600 text-white"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium">Location</label>
+                                    <label className="block text-base font-medium">Location</label>
                                     <input
                                         type="text"
                                         name="location"
                                         value={editData.location}
                                         onChange={handleEditChange}
-                                        className="w-full p-2 mt-1 rounded-md bg-gray-700 border border-gray-600 text-white"
+                                        className="w-full p-3 mt-2 rounded-md bg-gray-700 border border-gray-600 text-white"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium">Jersey Colors</label>
+                                    <label className="block text-base font-medium">Jersey Colors</label>
                                     {editData.jersey_color.map((color, index) => (
-                                        <div key={index} className="flex items-center gap-2 mt-1 relative">
+                                        <div key={index} className="flex items-center gap-3 mt-3 relative">
                                             <div
-                                                className="w-10 h-10 rounded-md border-2 border-gray-600 cursor-pointer"
+                                                className="w-12 h-12 rounded-md border-2 border-gray-600 cursor-pointer"
                                                 style={{ backgroundColor: color }}
                                                 onClick={() => {
                                                     setCurrentColorIndex(index);
@@ -424,83 +424,83 @@ const TeamDetail = () => {
                                     <button
                                         type="button"
                                         onClick={addJerseyColor}
-                                        className="mt-2 px-4 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                                        className="mt-3 px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                                     >
                                         Add Color
                                     </button>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium">Members</label>
+                                    <label className="block text-base font-medium">Members</label>
                                     <input
                                         type="text"
                                         name="members"
                                         value={editData.members}
                                         onChange={handleEditChange}
-                                        className="w-full p-2 mt-1 rounded-md bg-gray-700 border border-gray-600 text-white"
+                                        className="w-full p-3 mt-2 rounded-md bg-gray-700 border border-gray-600 text-white"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium">Description</label>
+                                    <label className="block text-base font-medium">Description</label>
                                     <textarea
                                         name="description"
                                         value={editData.description}
                                         onChange={handleEditChange}
-                                        className="w-full p-2 mt-1 rounded-md bg-gray-700 border border-gray-600 text-white h-24 resize-none"
+                                        className="w-full p-3 mt-2 rounded-md bg-gray-700 border border-gray-600 text-white h-28 resize-none"
                                     />
                                 </div>
 
                                 {/* Contact */}
                                 <div>
-                                    <label className="block text-sm font-medium">Contact Person</label>
+                                    <label className="block text-base font-medium">Contact Person</label>
                                     <input
                                         type="text"
                                         name="contact_person_name"
                                         value={editData.contact_person_name}
                                         onChange={handleEditChange}
-                                        className="w-full p-2 mt-1 rounded-md bg-gray-700 border border-gray-600 text-white"
+                                        className="w-full p-3 mt-2 rounded-md bg-gray-700 border border-gray-600 text-white"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium">Phone</label>
+                                    <label className="block text-base font-medium">Phone</label>
                                     <input
                                         type="text"
                                         name="phone"
                                         value={editData.phone}
                                         onChange={handleEditChange}
-                                        className="w-full p-2 mt-1 rounded-md bg-gray-700 border border-gray-600 text-white"
+                                        className="w-full p-3 mt-2 rounded-md bg-gray-700 border border-gray-600 text-white"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium">Facebook Link</label>
+                                    <label className="block text-base font-medium">Facebook Link</label>
                                     <input
                                         type="url"
                                         name="facebook_link"
                                         value={editData.facebook_link}
                                         onChange={handleEditChange}
-                                        className="w-full p-2 mt-1 rounded-md bg-gray-700 border border-gray-600 text-white"
+                                        className="w-full p-3 mt-2 rounded-md bg-gray-700 border border-gray-600 text-white"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium">Instagram Link</label>
+                                    <label className="block text-base font-medium">Instagram Link</label>
                                     <input
                                         type="url"
                                         name="instagram_link"
                                         value={editData.instagram_link}
                                         onChange={handleEditChange}
-                                        className="w-full p-2 mt-1 rounded-md bg-gray-700 border border-gray-600 text-white"
+                                        className="w-full p-3 mt-2 rounded-md bg-gray-700 border border-gray-600 text-white"
                                     />
                                 </div>
                             </div>
-                            <div className="mt-6 flex justify-end gap-4">
+                            <div className="mt-8 flex justify-end gap-6">
                                 <button
                                     onClick={handleModalClose}
-                                    className="px-4 py-2 rounded-md bg-gray-600 text-white hover:bg-gray-700"
+                                    className="px-6 py-3 rounded-md bg-gray-600 text-white hover:bg-gray-700"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSave}
-                                    className="px-4 py-2 rounded-md bg-green-500 text-white hover:bg-green-600"
+                                    className="px-6 py-3 rounded-md bg-green-500 text-white hover:bg-green-600"
                                 >
                                     Save
                                 </button>
