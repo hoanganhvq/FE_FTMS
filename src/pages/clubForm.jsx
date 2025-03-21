@@ -3,24 +3,27 @@ import axios from 'axios';
 import config from '../config.json';
 import { CheckCircleIcon, XCircleIcon, TrashIcon } from '@heroicons/react/24/solid';
 import { SketchPicker } from 'react-color';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import { createTeam } from '../api/teamAPI';
+import { useNavigate } from "react-router-dom";
+import LoadingScreen from './loadingScreen';
 
 function ClubForm() {
+    const navigate = useNavigate();
+    const[loading, setLoading] = useState(false);
     const [clubData, setClubData] = useState({
-        club_image: null,
-        club_logo: null,
-        club_name: '',
-        phone_number: '',
-        contact_name: '',
-        email: '',
-        activity_area: '',
-        jersey_colors: ['#FFFFFF'],
+        image: '', // Chuỗi base64 của ảnh club
+        logo: '',  // Chuỗi base64 của logo
+        name: '',
+        contact_person_name: '',
+        location: '',
+        jersey_color: ['#FFFFFF'],
         description: '',
+        facebook_link: '',
+        instagram_link: '',
         club_image_preview: null,
         club_logo_preview: null,
+        createdBy: JSON.parse(localStorage.getItem('user')).id || null
     });
-
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [currentColorIndex, setCurrentColorIndex] = useState(0);
     const colorPickerRef = useRef(null);
@@ -37,9 +40,10 @@ function ClubForm() {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setClubData({ ...clubData, club_image: file, club_image_preview: reader.result });
+                const base64String = reader.result; // Chuỗi base64 đầy đủ (bao gồm "data:image/jpeg;base64,")
+                setClubData({ ...clubData, image: base64String, club_image_preview: base64String });
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(file); // Chuyển file thành base64
         }
     };
 
@@ -48,46 +52,67 @@ function ClubForm() {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setClubData({ ...clubData, club_logo: file, club_logo_preview: reader.result });
+                const base64String = reader.result; // Chuỗi base64 đầy đủ
+                setClubData({ ...clubData, logo: base64String, club_logo_preview: base64String });
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(file); // Chuyển file thành base64
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const formDataToSend = new FormData();
-        Object.keys(clubData).forEach((key) => {
-            if (key === 'jersey_colors') {
-                formDataToSend.append(key, JSON.stringify(clubData[key]));
-            } else if (clubData[key]) {
-                formDataToSend.append(key, clubData[key]);
-            }
-        });
+        // Nếu cần loại bỏ tiền tố base64 ("data:image/jpeg;base64,") trước khi lưu lên Firebase
+        const cleanBase64Image = clubData.image ? clubData.image.replace(/^data:image\/[a-z]+;base64,/, '') : '';
+        const cleanBase64Logo = clubData.logo ? clubData.logo.replace(/^data:image\/[a-z]+;base64,/, '') : '';
+
+        // Tạo object dữ liệu để gửi lên API hoặc Firebase
+        const dataToSend = {
+            name: clubData.name,
+            contact_person_name: clubData.contact_person_name,
+            location: clubData.location,
+            jersey_color: JSON.stringify(clubData.jersey_color),
+            description: clubData.description,
+            facebook_link: clubData.facebook_link,
+            instagram_link: clubData.instagram_link,
+            createdBy: clubData.createdBy,
+            image: cleanBase64Image, // Chuỗi base64 không tiền tố
+            logo: cleanBase64Logo    // Chuỗi base64 không tiền tố
+        };
 
         try {
-            await axios.post(config.clubAPI + '/', formDataToSend, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            console.log("Data to send: ", dataToSend);
+            console.log("tokeb", localStorage.getItem('token'));
+            const token = localStorage.getItem('token');
+             await createTeam(dataToSend, token); // Gọi API với dữ liệu đã xử lý
+        
             document.getElementById('success-message').textContent = 'New club is successfully created.';
             document.getElementById('success-container').style.display = 'flex';
             setClubData({
-                club_image: null,
-                club_logo: null,
-                club_name: '',
-                phone_number: '',
-                contact_name: '',
-                email: '',
-                activity_area: '',
-                jersey_colors: ['#FFFFFF'],
+                image: '',
+                logo: '',
+                name: '',
+                contact_person_name: '',
+                location: '',
+                jersey_color: ['#FFFFFF'],
                 description: '',
+                facebook_link: '',
+                instagram_link: '',
                 club_image_preview: null,
                 club_logo_preview: null,
+                createdBy: JSON.parse(localStorage.getItem('user')).id || null
             });
         } catch (error) {
             console.error('Error creating club:', error);
-            document.getElementById('error-message').textContent = 'An error occurred. Please try again.';
-            document.getElementById('error-container').style.display = 'flex';
+            if (error.response && error.response.status === 409) {
+                document.getElementById('error-message').textContent = 'You already have a team!';
+                document.getElementById('error-container').style.display = 'flex';
+                alert("You already have a team!");
+                navigate('/manage-clubs'); // Điều hướng nếu cần
+              } else {
+                document.getElementById('error-message').textContent =
+                  error.response?.data?.message || 'An error occurred. Please try again.';
+                document.getElementById('error-container').style.display = 'flex';
+              }
         }
     };
 
@@ -97,22 +122,18 @@ function ClubForm() {
     };
 
     const handleColorChange = (color) => {
-        const newColors = [...clubData.jersey_colors];
+        const newColors = [...clubData.jersey_color];
         newColors[currentColorIndex] = color.hex;
-        setClubData({ ...clubData, jersey_colors: newColors });
+        setClubData({ ...clubData, jersey_color: newColors });
     };
 
     const addColor = () => {
-        setClubData({ ...clubData, jersey_colors: [...clubData.jersey_colors, '#FFFFFF'] });
+        setClubData({ ...clubData, jersey_color: [...clubData.jersey_color, '#FFFFFF'] });
     };
 
     const removeColor = (index) => {
-        const newColors = clubData.jersey_colors.filter((_, i) => i !== index);
-        setClubData({ ...clubData, jersey_colors: newColors });
-    };
-
-    const handleDescriptionChange = (value) => {
-        setClubData({ ...clubData, description: value });
+        const newColors = clubData.jersey_color.filter((_, i) => i !== index);
+        setClubData({ ...clubData, jersey_color: newColors });
     };
 
     useEffect(() => {
@@ -128,7 +149,6 @@ function ClubForm() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950 p-10 flex items-center justify-center">
             <div className="w-full max-w-5xl bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-10 border border-white/10 overflow-hidden relative">
-                {/* Subtle glowing orb effect */}
                 <div className="absolute -top-20 -left-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl animate-pulse"></div>
                 <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
 
@@ -159,7 +179,7 @@ function ClubForm() {
                                     type="file"
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                     onChange={handleImageChange}
-                                    required
+                                // required
                                 />
                             </div>
                         </div>
@@ -175,7 +195,7 @@ function ClubForm() {
                                     type="file"
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                     onChange={handleLogoChange}
-                                    required
+                                // required
                                 />
                             </div>
                         </div>
@@ -186,8 +206,8 @@ function ClubForm() {
                             <label className="text-sm font-semibold text-gray-200 tracking-wide">Club Name *</label>
                             <input
                                 type="text"
-                                name="club_name"
-                                value={clubData.club_name}
+                                name="name"
+                                value={clubData.name}
                                 onChange={handleChange}
                                 placeholder="Enter club name..."
                                 className="w-full p-5 rounded-2xl bg-gray-800/20 border border-gray-700 text-white placeholder-gray-500 focus:ring-4 focus:ring-indigo-500/50 focus:border-indigo-500 shadow-md transition-all duration-300"
@@ -195,13 +215,13 @@ function ClubForm() {
                             />
                         </div>
                         <div className="space-y-3">
-                            <label className="text-sm font-semibold text-gray-200 tracking-wide">Phone Number *</label>
+                            <label className="text-sm font-semibold text-gray-200 tracking-wide">Contact Name *</label>
                             <input
                                 type="text"
-                                name="phone_number"
-                                value={clubData.phone_number}
+                                name="contact_person_name"
+                                value={clubData.contact_person_name}
                                 onChange={handleChange}
-                                placeholder="Enter phone number..."
+                                placeholder="Enter contact name..."
                                 className="w-full p-5 rounded-2xl bg-gray-800/20 border border-gray-700 text-white placeholder-gray-500 focus:ring-4 focus:ring-indigo-500/50 focus:border-indigo-500 shadow-md transition-all duration-300"
                                 required
                             />
@@ -209,48 +229,50 @@ function ClubForm() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+
                         <div className="space-y-3">
-                            <label className="text-sm font-semibold text-gray-200 tracking-wide">Contact Name *</label>
+                            <label className="text-sm font-semibold text-gray-200 tracking-wide">Activity Area *</label>
                             <input
                                 type="text"
-                                name="contact_name"
-                                value={clubData.contact_name}
+                                name="location"
+                                value={clubData.location}
                                 onChange={handleChange}
-                                placeholder="Enter contact name..."
-                                className="w-full p-5 rounded-2xl bg-gray-800/20 border border-gray-700 text-white placeholder-gray-500 focus:ring-4 focus:ring-indigo-500/50 focus:border-indigo-500 shadow-md transition-all duration-300"
-                                required
-                            />
-                        </div>
-                        <div className="space-y-3">
-                            <label className="text-sm font-semibold text-gray-200 tracking-wide">Email Address *</label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={clubData.email}
-                                onChange={handleChange}
-                                placeholder="Enter email address..."
+                                placeholder="Enter activity area..."
                                 className="w-full p-5 rounded-2xl bg-gray-800/20 border border-gray-700 text-white placeholder-gray-500 focus:ring-4 focus:ring-indigo-500/50 focus:border-indigo-500 shadow-md transition-all duration-300"
                                 required
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        <label className="text-sm font-semibold text-gray-200 tracking-wide">Activity Area *</label>
-                        <input
-                            type="text"
-                            name="activity_area"
-                            value={clubData.activity_area}
-                            onChange={handleChange}
-                            placeholder="Enter activity area..."
-                            className="w-full p-5 rounded-2xl bg-gray-800/20 border border-gray-700 text-white placeholder-gray-500 focus:ring-4 focus:ring-indigo-500/50 focus:border-indigo-500 shadow-md transition-all duration-300"
-                            required
-                        />
+                    {/* Thêm hai trường mới: Facebook Link và Instagram Link */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <label className="text-sm font-semibold text-gray-200 tracking-wide">Facebook Link</label>
+                            <input
+                                type="url"
+                                name="facebook_link"
+                                value={clubData.facebook_link}
+                                onChange={handleChange}
+                                placeholder="Enter Facebook link (e.g., https://facebook.com/yourclub)"
+                                className="w-full p-5 rounded-2xl bg-gray-800/20 border border-gray-700 text-white placeholder-gray-500 focus:ring-4 focus:ring-indigo-500/50 focus:border-indigo-500 shadow-md transition-all duration-300"
+                            />
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-sm font-semibold text-gray-200 tracking-wide">Instagram Link</label>
+                            <input
+                                type="url"
+                                name="instagram_link"
+                                value={clubData.instagram_link}
+                                onChange={handleChange}
+                                placeholder="Enter Instagram link (e.g., https://instagram.com/yourclub)"
+                                className="w-full p-5 rounded-2xl bg-gray-800/20 border border-gray-700 text-white placeholder-gray-500 focus:ring-4 focus:ring-indigo-500/50 focus:border-indigo-500 shadow-md transition-all duration-300"
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-5">
                         <label className="text-sm font-semibold text-gray-200 tracking-wide">Jersey Colors *</label>
-                        {clubData.jersey_colors.map((color, index) => (
+                        {clubData.jersey_color.map((color, index) => (
                             <div key={index} className="relative flex items-center gap-4">
                                 <div
                                     className="w-full p-5 rounded-2xl bg-gray-800/20 border border-gray-700 flex items-center gap-4 cursor-pointer hover:bg-gray-700/30 shadow-md transition-all duration-300"
@@ -298,21 +320,12 @@ function ClubForm() {
 
                     <div className="space-y-3">
                         <label className="text-sm font-semibold text-gray-200 tracking-wide">Club Description</label>
-                        <ReactQuill
-                            theme="snow"
+                        <textarea
+                            name="description"
                             value={clubData.description}
-                            onChange={handleDescriptionChange}
-                            className="bg-gray-800/20 text-white rounded-2xl shadow-md"
+                            onChange={handleChange}
                             placeholder="Enter club description..."
-                            modules={{
-                                toolbar: [
-                                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                                    ['bold', 'italic', 'underline', 'strike'],
-                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                                    ['link', 'image'],
-                                    ['clean'],
-                                ],
-                            }}
+                            className="w-full h-40 p-5 rounded-2xl bg-gray-800/20 border border-gray-700 text-white placeholder-gray-500 focus:ring-4 focus:ring-indigo-500/50 focus:border-indigo-500 shadow-md transition-all duration-300 resize-y"
                         />
                     </div>
 

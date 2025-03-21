@@ -261,8 +261,8 @@ const TournamentInformation = () => {
                           {team.name}
                         </td>
                         <td className="px-6 py-4 text-center text-gray-200">{team.members}</td>
-                        <td className="px-6 py-4 text-gray-200">{team.createdBy?.name}</td>
-                        <td className="px-6 py-4 text-center text-gray-200">{team.createdBy?.phone}</td>
+                        <td className="px-6 py-4 text-gray-200">{team.contact_person_name}</td>
+                        <td className="px-6 py-4 text-center text-gray-200">{team.phone}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -2,15 +2,18 @@ import axios from "axios";
 
 const API_URL = "http://localhost:5000/api/team";
 
-export const getTeams = async()=>{
-    try{
-        const res = axios.get(API_URL);
-        return res.data
-    } catch(error){
-        console.error("Erro fetching Teams data: ", error);
+
+export const getTeams = async () => {
+    try {
+        const res = await axios.get(API_URL, {
+            headers: { 'Cache-Control': 'no-cache' } //To toell the server not to cache
+        });
+        return res.data;
+    } catch (error) {
+        console.error("Error fetching Teams data: ", error);
         throw error;
     }
-}
+};
 
 export const getTeamById = async(id) =>{
     try{
@@ -22,9 +25,14 @@ export const getTeamById = async(id) =>{
     }
 }
 
-export const createTeam = async(teamData) =>{
+
+export const createTeam = async(teamData, token) =>{
     try{
-        const res = await axios.post(API_URL, teamData);
+        const res = await axios.post(API_URL, teamData, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
         return res.data
     }catch(error){
         console.error("Error creating Team: ", error);
@@ -61,4 +69,26 @@ export const getTeamsById = async(ids) =>{
         console.error("Error fetching teams ", error);
         throw error;
     }
+}
+
+export const addPlayerIntoTeam = async(id, playerData) =>{
+    try{
+        const res  = await axios.post(`${API_URL}/addPlayer/${id}`, playerData);
+        return res.data
+    }catch(error){
+        console.error("Error adding player to team ", error);
+        throw error;
+    }
+}
+
+
+export const toReckonTeam = async(id)=>{
+    try{
+        const res = await axios.get(`${API_URL}/statistic/${id}`);
+        return res.data
+    }catch(error){
+        console.log("Error to reckon team: ", error);
+        throw error;
+    }
+
 }

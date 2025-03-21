@@ -9,14 +9,7 @@ const ManagePlayers = () => {
     image: "",
     goals: 0,
   });
-  const [teamStats, setTeamStats] = useState({
-    goalsScored: 0,
-    goalsConceded: 0,
-    yellowCards: 0,
-    redCards: 0,
-    wins: 0,
-    losses: 0,
-  });
+ 
   const [error, setError] = useState("");
 
   const handleAddPlayer = () => {
@@ -41,19 +34,6 @@ const ManagePlayers = () => {
 
   const handleDeletePlayer = (index) => {
     setPlayers(players.filter((_, i) => i !== index));
-  };
-
-  const handleEditStats = (field, value) => {
-    setTeamStats({ ...teamStats, [field]: parseInt(value) || 0 });
-  };
-
-  const statLabels = {
-    goalsScored: "Bàn thắng",
-    goalsConceded: "Bàn thua",
-    yellowCards: "Thẻ vàng",
-    redCards: "Thẻ đỏ",
-    wins: "Thắng",
-    losses: "Thua",
   };
 
   return (
@@ -166,28 +146,6 @@ const ManagePlayers = () => {
       {error && <p className="text-red-400 text-center mt-3">{error}</p>}
 
       {/* Thống kê đội */}
-      <h3 className="text-lg font-semibold mt-6">📊 Thống kê đội bóng</h3>
-      <div className="bg-gray-800 p-4 rounded-lg shadow-md mt-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-          {Object.keys(teamStats).map((stat) => (
-            <div
-              key={stat}
-              className="flex flex-col items-center bg-gray-700 p-3 rounded-lg shadow-sm hover:bg-gray-600 transition-colors"
-            >
-              <label className="text-sm font-medium text-green-400 mb-2">
-                {statLabels[stat]}
-              </label>
-              <input
-                type="number"
-                value={teamStats[stat]}
-                onChange={(e) => handleEditStats(stat, e.target.value)}
-                className="w-16 p-2 bg-gray-900 text-white text-center border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                min="0"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };
