@@ -27,6 +27,8 @@ export const getTeamById = async(id) =>{
 
 
 export const createTeam = async(teamData, token) =>{
+    console.log(teamData);
+    
     try{
         const res = await axios.post(API_URL, teamData, {
             headers: {

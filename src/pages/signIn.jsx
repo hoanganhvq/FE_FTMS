@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import {login} from '../api/userAPI';
 import { toast } from 'react-toastify';
+import { useAuth } from '../AuthContext';
 const SignIn = () => {
     const navigate = useNavigate(); // Hook điều hướng
+    const {login: setAuthLogin} = useAuth();
     const [formInfo, setFormInfo] = useState({
         email: '',
         password: '',
     });
 
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false); // Add loading state
 
 
     const handleChange = (e) => {
@@ -21,27 +24,41 @@ const SignIn = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formInfo.email || !formInfo.password) {
+            setError('Please fill in all fields');
+            return;
+          }
         
         if (formInfo.password.length < 6) {
             setError('Password must be at least 6 characters');
             return;
         }
+        setIsLoading(true);
          try{
             const res = await login(formInfo);
             const {token, user} = res;
 
             localStorage.setItem('token', token);
-            console.log('Token: ', token)
             localStorage.setItem('user', JSON.stringify(user));
+            console.log(token);
+            
+            setAuthLogin(true); // set authenticated state to true
+
             toast.success(`Welcome back, ${user.name}!`, {
                 onClose: () => navigate('/home'),
                 autoClose: 1500,
             });
-            navigate('/home');
+            setTimeout(() => {
+                navigate('/home');
+              }, 1500);
+            
+            alert("You sign in successfully!");
             setError('');
 
          } catch(err){
             setError(err.response.data.message || 'Invalid email or password');
+         } finally{
+            setIsLoading(false);
          }
 
     };

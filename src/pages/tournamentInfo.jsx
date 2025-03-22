@@ -151,7 +151,7 @@ const TournamentInformation = () => {
           <img
             src={tournament.logo}
             alt="Tournament Banner"
-            className="w-full h-64 object-cover border-b-4 border-blue-500 shadow-xl"
+            className="w-full h-80 object-cover border-b-4 border-blue-500 shadow-xl" // Tăng h-64 lên h-80
           />
           <h1 className="mt-6 text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 uppercase tracking-tight py-4">
             {tournament.name}

@@ -4,6 +4,7 @@ import { deletePlayer, updatePlayer } from "../api/playerAPI";
 import LoadingScreen from "./loadingScreen";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { uploadImageTournamentAndPlayer } from "../api/imageAPI";
 
 const ManagePlayers = () => {
   const navigate = useNavigate();
@@ -11,7 +12,8 @@ const ManagePlayers = () => {
     name: "",
     position: "",
     number: "",
-    avatar: "",
+    avatar: null, // File object
+    avatarPreview: "", // Base64 để preview
     goals: 0,
   });
   const [error, setError] = useState("");
@@ -20,17 +22,20 @@ const ManagePlayers = () => {
   const [players, setPlayers] = useState([]);
   const positions = ["Goalkeeper", "Defender", "Midfielder", "Forward"];
   const [loading, setLoading] = useState(false);
-  const[team, setTeam] = useState(null);
+  const [team, setTeam] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const fetchPlayers = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
       console.log("Token: ", token);
       const res = await getTeamByUserId(token);
-      if(!res){
+      if (!res) {
         setPlayers([]);
         return;
-      }      
+      }
       setTeam(res[0]);
       setPlayers(res[0].players);
     } catch (error) {
@@ -41,11 +46,9 @@ const ManagePlayers = () => {
     }
   };
 
-
   useEffect(() => {
     fetchPlayers();
   }, []);
-
 
   const handleAddPlayer = async () => {
     if (!newPlayer.name || !newPlayer.position || !newPlayer.number) {
@@ -58,19 +61,31 @@ const ManagePlayers = () => {
       return;
     }
 
+    setIsCreating(true);
     try {
-      const teamId = team._id;// Giả sử teamId nằm trong res[0]._id
-      const playerData = { ...newPlayer, number: numberAsInt };
+      const teamId = team._id;
+      let playerData = { ...newPlayer, number: numberAsInt };
+
+      if (newPlayer.avatar) {
+        const id = `player_${Date.now()}`;
+        const avatarUrl = await uploadImageTournamentAndPlayer(id, newPlayer.avatar);
+        playerData.avatar = avatarUrl;
+      } else {
+        playerData.avatar = "https://res.cloudinary.com/dnuqb888u/image/upload/v1742676178/defaultUser_wyeok8.jpg";
+      }
+
       console.log("Player data to add: ", playerData);
       console.log("Team ID: ", teamId);
-            
-      await addPlayerIntoTeam(teamId, playerData); // Gọi API để thêm player
-      await fetchPlayers(); // Lấy lại danh sách players từ server
-      setNewPlayer({ name: "", position: "", number: "", avatar: "", goals: 0 });
+      const { avatarPreview, ...rest } = playerData;
+      await addPlayerIntoTeam(teamId, rest);
+      await fetchPlayers();
+      setNewPlayer({ name: "", position: "", number: "", avatar: null, avatarPreview: "", goals: 0 });
       setError("");
     } catch (error) {
       console.error("Error adding player: ", error);
       setError(" Failed to add player. Please try again.");
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -84,8 +99,8 @@ const ManagePlayers = () => {
   const handleDeletePlayer = async (index) => {
     try {
       const playerId = players[index]._id;
-      await deletePlayer(playerId); // Gọi API để xóa player
-      await fetchPlayers(); // Lấy lại danh sách players từ server
+      await deletePlayer(playerId);
+      await fetchPlayers();
     } catch (error) {
       console.error("Error deleting player: ", error);
       setError(" Failed to delete player. Please try again.");
@@ -102,14 +117,25 @@ const ManagePlayers = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setNewPlayer({ ...newPlayer, avatar: e.target.result });
+        setNewPlayer({ ...newPlayer, avatar: file, avatarPreview: e.target.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setEditedPlayer({ ...editedPlayer, avatar: file, avatarPreview: e.target.result });
       };
       reader.readAsDataURL(file);
     }
   };
 
   const removeImage = () => {
-    setNewPlayer({ ...newPlayer, avatar: "" });
+    setNewPlayer({ ...newPlayer, avatar: null, avatarPreview: "" });
   };
 
   const startEditing = (index) => {
@@ -118,7 +144,7 @@ const ManagePlayers = () => {
       return;
     }
     setEditingIndex(index);
-    setEditedPlayer({ ...players[index] });
+    setEditedPlayer({ ...players[index], avatar: null, avatarPreview: players[index].avatar });
   };
 
   const saveEdit = async (index) => {
@@ -140,19 +166,30 @@ const ManagePlayers = () => {
       setError(" Jersey number already exists!");
       return;
     }
-
+    setIsUpdating(true);
     try {
-      const { _id, __v, ...dataToUpdate } = editedPlayer; // Loại bỏ _id và __v
-      const token = localStorage.getItem("token");
-      console.log("Data to update: ", { ...dataToUpdate, number: numberAsInt });
-      await updatePlayer(_id, { ...dataToUpdate, number: numberAsInt }); // Gọi API để cập nhật
-      await fetchPlayers(); // Lấy lại danh sách players từ server
+      const { _id, __v, avatarPreview, ...dataToUpdate } = editedPlayer;
+      let updatedData = { ...dataToUpdate, number: numberAsInt };
+
+      if (editedPlayer.avatar instanceof File) {
+        const id = `player_${Date.now()}`;
+        const avatarUrl = await uploadImageTournamentAndPlayer(id, editedPlayer.avatar);
+        updatedData.avatar = avatarUrl;
+      } else {
+        updatedData.avatar = editedPlayer.avatarPreview || "https://res.cloudinary.com/dnuqb888u/image/upload/v1742676178/defaultUser_wyeok8.jpg";
+      }
+
+      console.log("Data to update: ", updatedData);
+      await updatePlayer(_id, updatedData);
+      await fetchPlayers();
       setEditingIndex(null);
       setEditedPlayer(null);
       setError("");
     } catch (error) {
       console.error("Error updating player: ", error);
       setError("⚠️ Failed to update player. Please try again.");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -174,7 +211,7 @@ const ManagePlayers = () => {
             It looks like you haven’t created a team yet. Start by creating one!
           </p>
           <button
-            onClick={() => navigate("/new-club")} // Navigate to create club page
+            onClick={() => navigate("/new-club")}
             className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
           >
             Create Your Club
@@ -183,12 +220,12 @@ const ManagePlayers = () => {
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-700 p-8 flex items-center justify-center">
       <div className="w-full max-w-6xl bg-gray-800 p-10 rounded-3xl shadow-2xl border border-gray-700">
         <h1 className="text-5xl font-extrabold text-center text-white drop-shadow-lg mb-10">
           {team.name}
-          {/* Manage Your Team */}
         </h1>
 
         {/* Player List */}
@@ -203,11 +240,33 @@ const ManagePlayers = () => {
                 className="bg-gray-700 p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-600"
               >
                 <div className="relative flex justify-center mb-4">
-                  <img
-                    src={player.avatar || "https://via.placeholder.com/100"}
-                    alt={player.name}
-                    className="w-20 h-20 rounded-full object-cover border-4 border-gray-600 shadow-inner"
-                  />
+                  {editingIndex === index ? (
+                    <div className="relative group">
+                      <label htmlFor={`edit-avatar-${index}`} className="cursor-pointer">
+                        <img
+                          src={editedPlayer.avatarPreview || "https://via.placeholder.com/100"}
+                          alt={player.name}
+                          className="w-24 h-24 rounded-full object-cover border-4 border-blue-500 shadow-inner hover:opacity-75 transition-all duration-300" // Tăng kích thước lên w-24 h-24
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full">
+                          Change Avatar
+                        </span>
+                      </label>
+                      <input
+                        id={`edit-avatar-${index}`}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleEditImageChange}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                    </div>
+                  ) : (
+                    <img
+                      src={player.avatar || "https://via.placeholder.com/100"}
+                      alt={player.name}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-gray-600 shadow-inner" // Tăng kích thước lên w-24 h-24
+                    />
+                  )}
                   <span className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-lg shadow-md">
                     {player.position || "N/A"}
                   </span>
@@ -277,9 +336,23 @@ const ManagePlayers = () => {
                     <>
                       <button
                         onClick={() => saveEdit(index)}
-                        className="flex-1 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-md transition-all duration-300 text-sm"
+                        className={`flex-1 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-300 shadow-lg transform hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg ${isUpdating ? 'animate-pulse' : 'hover:from-blue-600 hover:to-purple-700'}`}
                       >
-                        Save
+                        {isUpdating ? (
+                          <span className="flex items-center justify-center gap-3">
+                            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              />
+                            </svg>
+                            Saving...
+                          </span>
+                        ) : (
+                          "Save"
+                        )}
                       </button>
                       <button
                         onClick={cancelEdit}
@@ -335,28 +408,38 @@ const ManagePlayers = () => {
               placeholder="Jersey Number *"
             />
             <div className="relative group">
+              <label
+                htmlFor="avatar-upload"
+                className="flex items-center justify-between w-full p-4 bg-gray-700 border border-gray-600 rounded-lg text-gray-400 cursor-pointer hover:bg-gray-600 hover:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400 transition-all duration-300 shadow-sm"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="bg-blue-500/20 p-2 rounded-full text-gray-300 group-hover:text-blue-400 transition-all">
+                    📷
+                  </span>
+                  <span className="truncate">
+                    {newPlayer.avatar ? "Image Selected" : "Upload Player Avatar (optional)"}
+                  </span>
+                </span>
+                <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md group-hover:bg-blue-600 transition-all">
+                  Choose File
+                </span>
+              </label>
               <input
+                id="avatar-upload"
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className="w-full p-4 pl-14 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all group-hover:border-blue-400"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-blue-500/20 p-2 rounded-full text-gray-300 group-hover:text-blue-400 transition-all">
-                📷
-              </span>
-              <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm italic group-hover:text-blue-300 transition-all">
-                {newPlayer.avatar ? "Image Selected" : "Upload Image (optional)"}
-              </span>
             </div>
           </div>
 
-          {/* Image Preview */}
-          {newPlayer.avatar && (
+          {newPlayer.avatarPreview && (
             <div className="mt-6 flex justify-center relative">
               <img
-                src={newPlayer.avatar}
+                src={newPlayer.avatarPreview}
                 alt="Preview"
-                className="w-28 h-28 rounded-full object-cover border-4 border-blue-500 shadow-md"
+                className="w-32 h-32 rounded-full object-cover border-4 border-blue-500 shadow-md" // Tăng kích thước lên w-32 h-32
               />
               <button
                 onClick={removeImage}
@@ -369,10 +452,27 @@ const ManagePlayers = () => {
           )}
         </div>
         <button
+          type="button"
+          disabled={isCreating}
           onClick={handleAddPlayer}
-          className="w-full mt-8 py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105"
+          className={`w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-300 shadow-lg transform hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg ${isCreating ? "animate-pulse" : "hover:from-blue-600 hover:to-purple-700"
+            }`}
         >
-          Add Player
+          {isCreating ? (
+            <span className="flex items-center justify-center gap-3">
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              Adding Player...
+            </span>
+          ) : (
+            "Add Player"
+          )}
         </button>
 
         {error && (

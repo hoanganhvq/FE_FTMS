@@ -1,18 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import config from '../config.json';
+import { createTeam } from '../api/teamAPI';
 import { CheckCircleIcon, XCircleIcon, TrashIcon } from '@heroicons/react/24/solid';
 import { SketchPicker } from 'react-color';
-import { createTeam } from '../api/teamAPI';
 import { useNavigate } from "react-router-dom";
-import LoadingScreen from './loadingScreen';
+import { uploadImageClub } from '../api/imageAPI';
 
 function ClubForm() {
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
     const [clubData, setClubData] = useState({
-        image: '',
-        logo: '',
+        image: null,
+        logo: null,
+        imagePreview: '',
+        logoPreview: '',
         name: '',
         contact_person_name: '',
         location: '',
@@ -22,13 +22,12 @@ function ClubForm() {
         instagram_link: '',
         members: 0,
         phone: '',
-        club_image_preview: null,
-        club_logo_preview: null,
-        createdBy: JSON.parse(localStorage.getItem('user')).id || null
+        createdBy: JSON.parse(localStorage.getItem('user'))?.id || null,
     });
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [currentColorIndex, setCurrentColorIndex] = useState(0);
     const colorPickerRef = useRef(null);
+    const [isSubmitting, setIsSubmiting] = useState(false);
 
     const hideErrorContainer = () => {
         const errorContainer = document.getElementById('error-container');
@@ -42,8 +41,7 @@ function ClubForm() {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                const base64String = reader.result;
-                setClubData({ ...clubData, image: base64String, club_image_preview: base64String });
+                setClubData({ ...clubData, image: file, imagePreview: reader.result });
             };
             reader.readAsDataURL(file);
         }
@@ -54,8 +52,7 @@ function ClubForm() {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                const base64String = reader.result;
-                setClubData({ ...clubData, logo: base64String, club_logo_preview: base64String });
+                setClubData({ ...clubData, logo: file, logoPreview: reader.result });
             };
             reader.readAsDataURL(file);
         }
@@ -63,34 +60,39 @@ function ClubForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const cleanBase64Image = clubData.image ? clubData.image.replace(/^data:image\/[a-z]+;base64,/, '') : '';
-        const cleanBase64Logo = clubData.logo ? clubData.logo.replace(/^data:image\/[a-z]+;base64,/, '') : '';
-
-        const dataToSend = {
-            name: clubData.name,
-            contact_person_name: clubData.contact_person_name,
-            location: clubData.location,
-            jersey_color: clubData.jersey_color,
-            description: clubData.description,
-            facebook_link: clubData.facebook_link,
-            instagram_link: clubData.instagram_link,
-            createdBy: clubData.createdBy,
-            image: cleanBase64Image,
-            logo: cleanBase64Logo,
-            members: 0,
-            phone: clubData.phone,
-        };
-
+        setIsSubmiting(true);
         try {
-            console.log("Data to send: ", dataToSend);
+            const id = `club_${Date.now()}`;
+            let imageUrl = '';
+            let logoUrl = '';
+
+            if (clubData.image) {
+                imageUrl = await uploadImageClub(id, 'image', clubData.image);
+                console.log(imageUrl);
+            }
+            if (clubData.logo) {
+                logoUrl = await uploadImageClub(id, 'logo', clubData.logo);
+                console.log(logoUrl);
+            }
+
+            const { imagePreview, logoPreview, ...rest } = clubData;
+            const clubPayload = {
+                ...rest,
+                image: imageUrl,
+                logo: logoUrl,
+            };
+
+            console.log("Club Payload: ", JSON.stringify(clubPayload, null, 2)); // In dữ liệu gửi đi
             const token = localStorage.getItem('token');
-            await createTeam(dataToSend, token);
+            await createTeam(clubPayload, token);
 
             document.getElementById('success-message').textContent = 'New club is successfully created.';
             document.getElementById('success-container').style.display = 'flex';
             setClubData({
-                image: '',
-                logo: '',
+                image: null,
+                logo: null,
+                imagePreview: '',
+                logoPreview: '',
                 name: '',
                 contact_person_name: '',
                 location: '',
@@ -98,24 +100,25 @@ function ClubForm() {
                 description: '',
                 facebook_link: '',
                 instagram_link: '',
-                club_image_preview: null,
-                club_logo_preview: null,
                 members: 0,
                 phone: '',
-                createdBy: JSON.parse(localStorage.getItem('user')).id || null
+                createdBy: JSON.parse(localStorage.getItem('user'))?.id || null,
             });
         } catch (error) {
             console.error('Error creating club:', error);
-            if (error.response && error.response.status === 409) {
+            if (error.response?.status === 409) {
+                alert("You already have a club");
                 document.getElementById('error-message').textContent = 'You already have a team!';
                 document.getElementById('error-container').style.display = 'flex';
-                alert("You already have a team!");
                 navigate('/manage-clubs');
             } else {
                 document.getElementById('error-message').textContent =
                     error.response?.data?.message || 'An error occurred. Please try again.';
                 document.getElementById('error-container').style.display = 'flex';
             }
+        }
+        finally {
+            setIsSubmiting(false);
         }
     };
 
@@ -157,11 +160,11 @@ function ClubForm() {
                 </h1>
 
                 <div id="success-container" className="hidden items-center gap-4 p-6 mb-8 bg-green-500/10 border border-green-500/30 rounded-lg shadow-md">
-                    <CheckCircleIcon className="h-8 w-8 text-green-400" id="success-svg" onClick={hideErrorContainer} />
+                    <CheckCircleIcon className="h-8 w-8 text-green-400" onClick={hideErrorContainer} />
                     <p id="success-message" className="text-green-300 text-lg font-semibold"></p>
                 </div>
                 <div id="error-container" className="hidden items-center gap-4 p-6 mb-8 bg-red-500/10 border border-red-500/30 rounded-lg shadow-md">
-                    <XCircleIcon className="h-8 w-8 text-red-400" id="error-svg" onClick={hideErrorContainer} />
+                    <XCircleIcon className="h-8 w-8 text-red-400" onClick={hideErrorContainer} />
                     <p id="error-message" className="text-red-300 text-lg font-semibold"></p>
                 </div>
 
@@ -170,31 +173,23 @@ function ClubForm() {
                         <div className="space-y-4">
                             <label className="text-base font-semibold text-gray-300">Club Image *</label>
                             <div className="relative h-64 w-full rounded-lg border-2 border-dashed border-gray-600 bg-gray-700/50 hover:bg-gray-600/50 shadow-inner transition-all duration-300 flex items-center justify-center overflow-hidden group">
-                                {clubData.club_image_preview ? (
-                                    <img src={clubData.club_image_preview} alt="Club Preview" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                                {clubData.imagePreview ? (
+                                    <img src={clubData.imagePreview} alt="Club Preview" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                                 ) : (
                                     <span className="text-gray-400 text-lg font-medium">Drop or Click to Upload</span>
                                 )}
-                                <input
-                                    type="file"
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                    onChange={handleImageChange}
-                                />
+                                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImageChange} />
                             </div>
                         </div>
                         <div className="space-y-4">
                             <label className="text-base font-semibold text-gray-300">Club Logo *</label>
                             <div className="relative h-64 w-full rounded-lg border-2 border-dashed border-gray-600 bg-gray-700/50 hover:bg-gray-600/50 shadow-inner transition-all duration-300 flex items-center justify-center overflow-hidden group">
-                                {clubData.club_logo_preview ? (
-                                    <img src={clubData.club_logo_preview} alt="Club Logo" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                                {clubData.logoPreview ? (
+                                    <img src={clubData.logoPreview} alt="Club Logo" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                                 ) : (
                                     <span className="text-gray-400 text-lg font-medium">Drop or Click to Upload</span>
                                 )}
-                                <input
-                                    type="file"
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                    onChange={handleLogoChange}
-                                />
+                                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleLogoChange} />
                             </div>
                         </div>
                     </div>
@@ -242,7 +237,7 @@ function ClubForm() {
                         <div className="space-y-4">
                             <label className="text-base font-semibold text-gray-300">Phone *</label>
                             <input
-                                type='text'
+                                type="text"
                                 name="phone"
                                 value={clubData.phone}
                                 onChange={handleChange}
@@ -339,9 +334,25 @@ function ClubForm() {
 
                     <button
                         type="submit"
-                        className="w-full py-5 bg-blue-500 hover:bg-blue-600 text-white text-xl font-bold rounded-lg shadow-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+                        disabled={isSubmitting}
+                        className={`w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-300 shadow-lg transform hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg ${isSubmitting ? 'animate-pulse' : 'hover:from-blue-600 hover:to-purple-700'
+                            }`}
                     >
-                        Create Club
+                        {isSubmitting ? (
+                            <span className="flex items-center justify-center gap-3">
+                                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    />
+                                </svg>
+                                Creating Club...
+                            </span>
+                        ) : (
+                            'Create Club'
+                        )}
                     </button>
                 </form>
             </div>
