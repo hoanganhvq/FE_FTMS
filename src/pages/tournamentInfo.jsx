@@ -54,7 +54,7 @@ const TournamentInformation = () => {
   const addTeam = async (teamData) => {
     try {
       await addTeamToTournament(teamData);
-      alert("Đăng ký thành công!");
+      alert("Register success");
       setIsTeamRegistered(true);
       fetchTournament();
       fetchTeamAttending();
@@ -64,15 +64,15 @@ const TournamentInformation = () => {
         alert("Your team already register!");
         setIsTeamRegistered(true);
       } else {
-        alert("Có lỗi xảy ra khi đăng ký!");
+        alert("Don't have any slot. See you later !")
       }
     }
   };
 
   const handleRegister = () => {
     if (!myTeam) {
-      alert("Vui lòng tạo đội trước!");
-      navigate("/ COXnew-club");
+      alert("Please create team first!");
+      navigate("/new-club");
       return;
     }
 
@@ -201,21 +201,19 @@ const TournamentInformation = () => {
           <div className="flex justify-center gap-4 mt-8 border-b border-gray-600/50">
             <button
               onClick={() => setActiveTab("details")}
-              className={`py-3 px-8 rounded-t-xl font-medium transition-all duration-300 ${
-                activeTab === "details"
+              className={`py-3 px-8 rounded-t-xl font-medium transition-all duration-300 ${activeTab === "details"
                   ? "bg-blue-500 text-white shadow-lg"
                   : "text-gray-300 hover:text-white hover:bg-blue-500/50"
-              }`}
+                }`}
             >
               <FaInfoCircle className="inline mr-2" /> Thông Tin
             </button>
             <button
               onClick={() => setActiveTab("teams")}
-              className={`py-3 px-8 rounded-t-xl font-medium transition-all duration-300 ${
-                activeTab === "teams"
+              className={`py-3 px-8 rounded-t-xl font-medium transition-all duration-300 ${activeTab === "teams"
                   ? "bg-blue-500 text-white shadow-lg"
                   : "text-gray-300 hover:text-white hover:bg-blue-500/50"
-              }`}
+                }`}
             >
               <FaUsers className="inline mr-2" /> Đội Tham Gia
             </button>

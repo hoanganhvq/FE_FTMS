@@ -9,7 +9,7 @@ import { uploadImageClub } from '../api/imageAPI';
 function ClubForm() {
     const navigate = useNavigate();
     const [clubData, setClubData] = useState({
-        image: null,
+        image_cover: null,
         logo: null,
         imagePreview: '',
         logoPreview: '',
@@ -41,7 +41,7 @@ function ClubForm() {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setClubData({ ...clubData, image: file, imagePreview: reader.result });
+                setClubData({ ...clubData, image_cover: file, imagePreview: reader.result });
             };
             reader.readAsDataURL(file);
         }
@@ -66,8 +66,8 @@ function ClubForm() {
             let imageUrl = '';
             let logoUrl = '';
 
-            if (clubData.image) {
-                imageUrl = await uploadImageClub(id, 'image', clubData.image);
+            if (clubData.image_cover) {
+                imageUrl = await uploadImageClub(id, 'image', clubData.image_cover);
                 console.log(imageUrl);
             }
             if (clubData.logo) {
@@ -78,7 +78,7 @@ function ClubForm() {
             const { imagePreview, logoPreview, ...rest } = clubData;
             const clubPayload = {
                 ...rest,
-                image: imageUrl,
+                image_cover: imageUrl,
                 logo: logoUrl,
             };
 
@@ -89,7 +89,7 @@ function ClubForm() {
             document.getElementById('success-message').textContent = 'New club is successfully created.';
             document.getElementById('success-container').style.display = 'flex';
             setClubData({
-                image: null,
+                image_cover: null,
                 logo: null,
                 imagePreview: '',
                 logoPreview: '',
@@ -178,7 +178,9 @@ function ClubForm() {
                                 ) : (
                                     <span className="text-gray-400 text-lg font-medium">Drop or Click to Upload</span>
                                 )}
-                                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImageChange} />
+                                <input type="file"
+                                 className="absolute inset-0 opacity-0 cursor-pointer" 
+                                onChange={handleImageChange} />
                             </div>
                         </div>
                         <div className="space-y-4">

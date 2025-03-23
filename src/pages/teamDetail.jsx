@@ -163,16 +163,16 @@ const TeamDetail = () => {
     return (
         <div className="p-8 min-h-screen flex justify-center items-center bg-gradient-to-br from-gray-900 to-gray-700">
             <div className="max-w-6xl w-full bg-gray-800 p-10 rounded-3xl shadow-2xl border border-gray-700">
-                <div className="relative h-80 rounded-lg overflow-hidden">
-                    {club.image && (
-                        <img src={club.image} alt="Club" className="w-full h-full object-cover brightness-75" />
+                <div className="relative h-80 rounded-lg overflow-visible">
+                    {club.image_cover && (
+                        <img src={club.image_cover} alt="Club" className="w-full h-full object-cover brightness-75" />
                     )}
                     {club.logo && (
-                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-10">
                             <img
                                 src={club.logo}
                                 alt="Logo"
-                                className="w-28 h-28 rounded-full border-4 border-white shadow-xl"
+                                className="w-36 h-36 rounded-full border-4 border-white shadow-xl object-cover"
                             />
                         </div>
                     )}
@@ -196,9 +196,8 @@ const TeamDetail = () => {
                         <button
                             key={key}
                             onClick={() => setActiveTab(key)}
-                            className={`px-8 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg transform hover:scale-105 ${
-                                activeTab === key ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                            }`}
+                            className={`px-8 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg transform hover:scale-105 ${activeTab === key ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                }`}
                         >
                             {label}
                         </button>
@@ -326,6 +325,8 @@ const TeamDetail = () => {
                                         { label: "Winning Rate", value: `${statistics.winningRate || 0}%`, color: "text-yellow-400" },
                                         { label: "Goals For", value: statistics.goalsFor || 0, color: "text-purple-400" },
                                         { label: "Goals Against", value: statistics.goalsAgainst || 0, color: "text-orange-400" },
+                                        { label: "Yellow Cards", value: statistics.yellowCards || 0, color: "text-yellow-500" }, // Thêm thẻ vàng
+                                        { label: "Red Cards", value: statistics.redCards || 0, color: "text-red-500" },         // Thêm thẻ đỏ
                                     ].map(({ label, value, color }, index) => (
                                         <div
                                             key={index}

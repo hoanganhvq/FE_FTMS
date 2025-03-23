@@ -35,3 +35,15 @@ export const getMe = async () => {
       throw new Error(error.response?.data?.message || "Failed to fetch user data");
     }
   };
+
+  export const updateProfile = async(userData)=>{
+    try {
+        const res = await axios.put(`${API_URL}/me`, userData, {
+            withCredentials: true,
+        });
+        return res.data;
+    } catch (error) {
+        console.error("Error updating user profile:", error.response?.data || error.message);
+        throw new Error(error.response?.data?.message || "Failed to update user profile");
+    }
+  }

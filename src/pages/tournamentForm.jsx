@@ -54,8 +54,9 @@ const NewTournamentForm = () => {
     try {
       const id = `tournament_${Date.now()}`;
       console.log("Loading", tournamentData.logo);
+     
+        const logoUrl = await uploadImageTournamentAndPlayer(id, tournamentData.logo);
       
-      const logoUrl = await uploadImageTournamentAndPlayer(id, tournamentData.logo);
 
       const defaultedData = {
         ...tournamentData,

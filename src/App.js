@@ -18,7 +18,7 @@ import ClubsDetails from './pages/teams';
 import ClubForm from './pages/clubForm';
 import TeamDetail from './pages/teamDetail';
 import ManageClub from './pages/manageClub';
-
+import UserProfile from './pages/userProfile';
 // Tournament Bracket Components
 import RoundOf32 from './components/roundOf32';
 import RoundOf16 from './components/roundOf16';
@@ -39,6 +39,8 @@ function App() {
         <AuthProvider>
             <BrowserRouter>
                 <Routes>
+                <Route path="/me" element={<UserProfile />} />
+
                     <Route path="/" element={<Layout />}>
                         <Route index element={<Home />} />
                         <Route path="/home" element={<Home />} />
@@ -57,8 +59,6 @@ function App() {
                             <Route path="/manage-clubs" element={<ManageClub />} />
                             <Route path="/tournaments-list" element={<TournamentList />} />
                             <Route path="/new-tournament" element={<NewTournamentForm />} />
-
-
                             {/* Bracket Routes with tournamentId */}
                             <Route path="/:id/test" element={<ComponentWithTournamentId component={TestBrackets} />} />
                             <Route path="/:id/groups" element={<ComponentWithTournamentId component={GetGroups} />} />

@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
-import {login} from '../api/userAPI';
+import { Link, useNavigate } from 'react-router-dom';
+import { login } from '../api/userAPI';
 import { toast } from 'react-toastify';
 import { useAuth } from '../AuthContext';
+
 const SignIn = () => {
-    const navigate = useNavigate(); // Hook điều hướng
-    const {login: setAuthLogin} = useAuth();
+    const navigate = useNavigate();
+    const { login: setAuthLogin } = useAuth();
     const [formInfo, setFormInfo] = useState({
         email: '',
         password: '',
     });
-
     const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false); // Add loading state
-
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
         setFormInfo({
@@ -27,22 +26,21 @@ const SignIn = () => {
         if (!formInfo.email || !formInfo.password) {
             setError('Please fill in all fields');
             return;
-          }
-        
+        }
         if (formInfo.password.length < 6) {
             setError('Password must be at least 6 characters');
             return;
         }
         setIsLoading(true);
-         try{
+        try {
             const res = await login(formInfo);
-            const {token, user} = res;
+            const { token, user } = res;
 
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
-            console.log(token);
-            
-            setAuthLogin(true); // set authenticated state to true
+            localStorage.setItem('isAuthenticated', 'true');
+
+            setAuthLogin(true);
 
             toast.success(`Welcome back, ${user.name}!`, {
                 onClose: () => navigate('/home'),
@@ -50,33 +48,34 @@ const SignIn = () => {
             });
             setTimeout(() => {
                 navigate('/home');
-              }, 1500);
-            
-            alert("You sign in successfully!");
+            }, 1500);
+
             setError('');
-
-         } catch(err){
-            setError(err.response.data.message || 'Invalid email or password');
-         } finally{
+        } catch (err) {
+            setError(err.response?.data?.message || 'Invalid email or password');
+        } finally {
             setIsLoading(false);
-         }
-
+        }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: 'url(/images/background6.jpg)' }}>
-            <div className="bg-gray-800 text-white rounded-lg shadow-lg p-8 max-w-md w-full">
-                <h2 className="text-2xl font-bold text-center mb-6">Sign In</h2>
-                <form onSubmit={handleSubmit} className="space-y-5">
+        <div
+            className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url(/images/background6.jpg)' }}
+        >
+            <div className="bg-gray-900 bg-opacity-90 text-white rounded-xl shadow-2xl p-10 max-w-lg w-full transform transition-all duration-300 hover:scale-105">
+                <h2 className="text-4xl font-extrabold text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                    Welcome Back
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Email */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-300">Email</label>
+                        <label className="block text-sm font-medium text-gray-200 mb-2">Email</label>
                         <input
-                            className="mt-1 w-full p-3 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full p-4 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                             type="email"
                             name="email"
-                            placeholder="Enter email..."
+                            placeholder="Enter your email..."
                             value={formInfo.email}
                             onChange={handleChange}
                         />
@@ -84,31 +83,43 @@ const SignIn = () => {
 
                     {/* Password */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-300">Password</label>
+                        <label className="block text-sm font-medium text-gray-200 mb-2">Password</label>
                         <input
-                            className="mt-1 w-full p-3 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full p-4 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                             type="password"
                             name="password"
-                            placeholder="Enter password..."
+                            placeholder="Enter your password..."
                             value={formInfo.password}
                             onChange={handleChange}
                         />
                     </div>
 
-                    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+                    {error && (
+                        <p className="text-red-400 text-sm mt-2 bg-red-900 bg-opacity-20 p-2 rounded-md text-center">
+                            {error}
+                        </p>
+                    )}
 
                     {/* Submit Button */}
                     <button
                         type="submit"
-
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-md transition-all duration-300"
+                        disabled={isLoading}
+                        className={`w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-4 rounded-lg transition-all duration-300 transform hover:scale-105 ${
+                            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                     >
-                        Sign In
+                        {isLoading ? 'Signing In...' : 'Sign In'}
                     </button>
 
                     {/* Register Link */}
-                    <p className="text-center text-sm text-gray-400 mt-3">
-                        Don't have an account? <Link to="/sign-up" className="text-blue-400 hover:underline">Sign up</Link>
+                    <p className="text-center text-sm text-gray-300 mt-4">
+                        Don’t have an account?{' '}
+                        <Link
+                            to="/sign-up"
+                            className="text-blue-400 hover:text-blue-300 transition-colors duration-200 font-medium"
+                        >
+                            Sign Up Now
+                        </Link>
                     </p>
                 </form>
             </div>

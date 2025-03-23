@@ -16,14 +16,17 @@ export default function Navbar() {
   const { logout, isAuthenticated } = useAuth(); // Use isAuthenticated to check login status
   const [userName, setUserName] = useState(null);
   const [activeItem, setActiveItem] = useState('Home');
-
+  const [userProfilePic,setUserProfilePic] = useState(null);
   // Fetch user data from localStorage on mount and when auth changes
   useEffect(() => {
     const user = localStorage.getItem('user');
+    console.log('user',JSON.parse(user));
     if (user && isAuthenticated) {
       setUserName(JSON.parse(user).name);
+      setUserProfilePic(JSON.parse(user).profilePic);
     } else {
       setUserName(null);
+      setUserProfilePic(null);
     }
   }, [isAuthenticated]); // Re-run when authentication status changes
 
@@ -41,7 +44,7 @@ export default function Navbar() {
     // Clear localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-
+    localStorage.removeItem('isAuthenticated');
     // Update AuthContext
     logout();
 
@@ -49,9 +52,10 @@ export default function Navbar() {
     toast.success('You have been logged out successfully!', {
       autoClose: 1500,
     });
-
+    
     alert("You sign out successfully!");
     // Redirect to sign-in page after toast
+    navigate('/sign-in');
   
   };
 
@@ -113,7 +117,7 @@ export default function Navbar() {
                                       <Link
                                         to={item.href}
                                         className={classNames(
-                                          active ? 'bg-gray-600' : '',
+                                             '',
                                           'block px-4 py-2 text-sm text-white'
                                         )}
                                         onClick={() => handleClick(item.name)}
@@ -125,11 +129,11 @@ export default function Navbar() {
                                   {item.name === 'Tournament' && (
                                     <>
                                       <Menu.Item>
-                                        {({ active }) => (
+                                        {({  }) => (
                                           <Link
                                             to="/new-tournament"
                                             className={classNames(
-                                              active ? 'bg-gray-600' : '',
+                                              '',
                                               'block px-4 py-2 text-sm text-white'
                                             )}
                                           >
@@ -215,7 +219,7 @@ export default function Navbar() {
                               <span className="sr-only">Open user menu</span>
                               <img
                                 className="h-8 w-8 rounded-full"
-                                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                                src={userProfilePic}
                                 alt="User profile"
                               />
                             </Menu.Button>
@@ -233,7 +237,7 @@ export default function Navbar() {
                               <Menu.Item>
                                 {({ active }) => (
                                   <Link
-                                    to="/profile"
+                                    to="/me"
                                     className={classNames(
                                       active ? 'bg-gray-600' : '',
                                       'block px-4 py-2 text-sm text-white'
@@ -243,19 +247,7 @@ export default function Navbar() {
                                   </Link>
                                 )}
                               </Menu.Item>
-                              <Menu.Item>
-                                {({ active }) => (
-                                  <Link
-                                    to="/settings"
-                                    className={classNames(
-                                      active ? 'bg-gray-600' : '',
-                                      'block px-4 py-2 text-sm text-white'
-                                    )}
-                                  >
-                                    Settings
-                                  </Link>
-                                )}
-                              </Menu.Item>
+                        
                               <Menu.Item>
                                 {({ active }) => (
                                   <button

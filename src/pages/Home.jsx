@@ -44,7 +44,7 @@ const Home = () => {
       title: "Statistics",
       description: "Track performance and stats",
       icon: "📊",
-      path: "/tournaments",
+      path: "/clubs",
     },
   ];
 
